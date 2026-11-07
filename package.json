@@ -1,0 +1,20 @@
+{
+	"name": "scene.apron.chat",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "node --experimental-strip-types --no-warnings scripts/build.mjs",
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"scenes": "node scripts/scenes/whosonfirst.mjs && node scripts/scenes/fixtures.mjs",
+		"typecheck": "npm run build && wrangler types && tsc --noEmit",
+		"test": "npm run build && vitest run"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "0.22.0",
+		"@resvg/resvg-js": "2.6.2",
+		"typescript": "6.0.3",
+		"vitest": "4.1.11",
+		"wrangler": "4.135.0"
+	}
+}
