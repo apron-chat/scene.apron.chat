@@ -132,7 +132,8 @@ and converted by `scripts/scenes/fixtures.mjs`. `piper` began as the fourth,
 and grew into its own script, `scripts/scenes/piper.mjs`, whose last
 afternoon is still that fixture's. It's a parody of HBO's *Silicon Valley*;
 its cast's avatars are cut by `scripts/scenes/piper-avatars.py` from
-`piper-avatars.webp`, a pixel-art drawing of them, and
+`piper-avatars.webp`, a pixel-art drawing of them (Richard and Gilfoyle from
+drawings of their own), and
 `scripts/scenes/piper-art.mjs` draws the rest of its pictures.
 
 ### Adding a scene
@@ -207,6 +208,14 @@ which for `wss://scene.apron.chat/<name>` is `https://scene.apron.chat`, so
 they need nothing more. The header's `media` names that origin too, so that
 the file, imported into apron-web as an archive, says where its media is
 (ARCHIVE.md §5); the server advertises it as `ext:media`.
+
+The scripts give each picture on the scene's origin a short hash of its file
+(`?v=<hash>`), so a client that cached it fetches it again once it changes,
+and `npm test` fails while a scene names a picture by an older hash: run
+`npm run scenes`. Avatars are in the listing's `users` only, not in each
+message's `from`: clients show each field from the user object they keep
+([§3.3.1](https://github.com/shazow/apron/blob/main/PROTOCOL.md#331-user-objects)),
+and a record's `from` needs only `user_id` and `name`.
 
 Served from another host, such as `wrangler dev` or a Preview, the scene's
 `https://scene.apron.chat` URLs are rewritten to that host's origin, so

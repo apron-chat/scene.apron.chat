@@ -64,7 +64,7 @@ describe("a scene over the protocol", () => {
 		const { server, auth, pushed } = await opening(peer);
 		const [rooms, ...records] = pushed;
 		expect(server!.method).toBe("server");
-		expect(server!.params).toMatchObject({ apron: 10, auth: ["guest"], title: "Who's on First?", avatar: "https://scene.test/whosonfirst/scene.png" });
+		expect(server!.params).toMatchObject({ apron: 10, auth: ["guest"], title: "Who's on First?", avatar: expect.stringMatching(/^https:\/\/scene\.test\/whosonfirst\/scene\.png\?v=[0-9a-f]{8}$/) });
 		// No pings asked for: an idle connection costs nothing, and nothing needs to know it's there.
 		expect(server!.params.ping).toBeUndefined();
 		// Nothing to page: everything is here.
@@ -246,9 +246,9 @@ describe("media", () => {
 			const peer = await connect("/whosonfirst", undefined, host);
 			const { pushed } = await opening(peer);
 			const who = pushed[0]!.params.users.find((user: any) => user.user_id === "who");
-			expect(who.avatar).toBe(`${origin}/whosonfirst/who.png`);
+			expect(who.avatar).toMatch(new RegExp(`^${origin}/whosonfirst/who\\.png\\?v=[0-9a-f]{8}$`));
 			const board = pushed.find((frame) => frame.method === "message" && frame.params.body?.embeds)!;
-			expect(board.params.body.embeds[0]).toMatchObject({ kind: "upload", url: `${origin}/whosonfirst/whiteboard.png`, og: { image: { url: `${origin}/whosonfirst/whiteboard.png`, width: 1200, height: 800 } } });
+			expect(board.params.body.embeds[0]).toMatchObject({ kind: "upload", url: expect.stringMatching(new RegExp(`^${origin}/whosonfirst/whiteboard\\.png\\?v=`)), og: { image: { url: expect.stringMatching(new RegExp(`^${origin}/whosonfirst/whiteboard\\.png\\?v=`)), width: 1200, height: 800 } } });
 			const all = pushed.map((frame) => JSON.stringify(frame)).join("\n");
 			if (origin !== "https://scene.apron.chat") expect(all).not.toContain("https://scene.apron.chat");
 			peer.close();

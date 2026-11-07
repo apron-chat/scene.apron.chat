@@ -4,8 +4,19 @@ import { SCENES } from "../src/scenes.gen";
 import { SCENE_NAME } from "../src/scenes";
 import { describe as summarize, landing } from "../scripts/landing.mjs";
 
+/** A URL's path on the scene's origin, without its version (`?v=`). */
+const path = (url: string) => url.slice(CANONICAL_ORIGIN.length).replace(/\?.*$/, "");
+
 /** Every file served next to the scenes, by its path: what their media URLs may name. */
 const SERVED = new Set(Object.keys(import.meta.glob("../scenes/**/*.png")).map((path) => path.slice("../scenes".length)));
+
+/** Each picture's file, by its path, as a data URL: what its version (`?v=`) hashes. */
+const PICTURES = Object.fromEntries(Object.entries(import.meta.glob<string>("../scenes/**/*.png", { query: "?inline", import: "default", eager: true })).map(([path, data]) => [path.slice("../scenes".length), data]));
+
+async function version(data: string): Promise<string> {
+	const bytes = Uint8Array.from(atob(data.slice(data.indexOf(",") + 1)), (c) => c.charCodeAt(0));
+	return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+}
 
 const FILES = Object.fromEntries(
 	Object.entries(import.meta.glob<string>("../scenes/*/scene.jsonl", { query: "?raw", import: "default", eager: true })).map(([path, text]) => [path.slice("../scenes/".length, -"/scene.jsonl".length), text]),
@@ -36,18 +47,32 @@ describe.each(Object.entries(FILES))("scenes/%s/scene.jsonl", (name, text) => {
 		const media = [...text.matchAll(/"avatar":"([^"]+)"|"(?:image|video|audio)":\{[^{}]*"url":"([^"]+)"/g)].map((match) => (match[1] ?? match[2])!);
 		for (const url of media) {
 			expect(url.startsWith(own), `${url} isn't on ${own}`).toBe(true);
-			expect(SERVED.has(url.slice(CANONICAL_ORIGIN.length)), `${url} isn't a file in scenes/`).toBe(true);
+			expect(SERVED.has(path(url)), `${url} isn't a file in scenes/`).toBe(true);
 		}
 		// Any other URL on its origin is a file here, or its live text. A link elsewhere is a link.
 		for (const [, url] of text.matchAll(/"url":"([^"]+)"/g)) {
 			if (!url!.startsWith(CANONICAL_ORIGIN)) continue;
 			const live = url!.startsWith(`${own}live/`) ? url!.slice(`${own}live/`.length) : undefined;
 			if (live !== undefined) expect(Object.hasOwn(scene.live, live), `${url} names no live text`).toBe(true);
-			else expect(SERVED.has(url!.slice(CANONICAL_ORIGIN.length)), `${url} isn't a file in scenes/`).toBe(true);
+			else expect(SERVED.has(path(url!)), `${url} isn't a file in scenes/`).toBe(true);
 		}
 	});
 
-	it("refers only to users, rooms and messages it has", () => {
+	it("versions each picture on its origin by its file, so clients fetch it again when it changes", async () => {
+		for (const [, url] of text.matchAll(/"(https:\/\/scene\.apron\.chat\/[^"]+\.png[^"]*)"/g)) {
+			const data = PICTURES[path(url!)];
+			expect(data, `${url} isn't a file in scenes/`).toBeDefined();
+			expect(url, "run npm run scenes").toBe(`${CANONICAL_ORIGIN}${path(url!)}?v=${await version(data!)}`);
+		}
+	});
+
+	it("gives avatars in its users, not in every record's from", () => {
+		for (const line of lines.slice(2)) {
+			for (const [, from] of JSON.stringify(line).matchAll(/"(?:from|user)":(\{[^{}]*\})/g)) expect(JSON.parse(from!), "a recorded user").not.toHaveProperty("avatar");
+		}
+	});
+
+		it("refers only to users, rooms and messages it has", () => {
 		const users = new Set(scene.users.keys());
 		const messages = new Map<string, any>();
 		const logIds = new Set<string>();
@@ -121,8 +146,8 @@ describe("the landing page", () => {
 		}
 		expect(page).toContain('<h3><a href="/whosonfirst">Who&#39;s on First?</a></h3>');
 		// A scene's own avatar, from wherever the page is served; else its initials.
-		expect(page).toContain('<img class="avatar" src="/whosonfirst/scene.png"');
-		expect(page).toContain('<img class="avatar" src="/piper/scene.png"');
+		expect(page).toMatch(/<img class="avatar" src="\/whosonfirst\/scene\.png\?v=[0-9a-f]{8}"/);
+		expect(page).toMatch(/<img class="avatar" src="\/piper\/scene\.png\?v=[0-9a-f]{8}"/);
 		expect(page).toContain('<span class="avatar mono" aria-hidden="true">TC</span>');
 	});
 

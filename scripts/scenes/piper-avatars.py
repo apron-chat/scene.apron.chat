@@ -18,7 +18,6 @@ ROWS = [(0, 333), (334, 667)]  # the grid's two rows, top and bottom
 
 # user_id, the centre of the face in the grid (x, y), its row, and its background.
 CAST = [
-    ("gilfoyle", 640, 125, 0, "#26232b"),
     ("dinesh", 930, 125, 0, "#e9c46a"),
     ("jared", 1350, 120, 0, "#a8dadc"),
     ("erlich", 1720, 120, 0, "#e76f51"),
@@ -31,6 +30,7 @@ CAST = [
 # Drawn on their own: user_id, the square to cut (left, top, size), and its background.
 SINGLES = [
     ("ada", (175, 30, 820), "#2a9d8f"),  # Richard, framed like the grid: head filling it, a hint of shoulders
+    ("gilfoyle", (0, 0, 1254), "#000000"),  # the whole drawing, staff and raven, on black
 ]
 
 

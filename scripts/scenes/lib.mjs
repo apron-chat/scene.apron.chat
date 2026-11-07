@@ -7,6 +7,22 @@
 //   const hi = s.say("general", "ada", "Hi @bob", { mentions: ["bob"] });
 //   s.react(hi, "bob", ["👋"]);
 //   writeFileSync("scenes/demo/scene.jsonl", s.archive({ title: "Demo" }));
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+
+const ORIGIN = "https://scene.apron.chat";
+const SCENES = new URL("../../scenes", import.meta.url);
+
+/**
+ * A picture's URL on the scene's own origin with a short hash of its file (`?v=<hash>`), so a client that cached
+ * the picture fetches it again once it changes. Any other URL, or one naming no file in scenes/, is left as it is.
+ */
+function versioned(url) {
+	if (!url.startsWith(`${ORIGIN}/`) || url.includes("?")) return url;
+	const file = new URL(`${SCENES.href}${url.slice(ORIGIN.length)}`);
+	if (!existsSync(file)) return url;
+	return `${url}?v=${createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 8)}`;
+}
 
 /**
  * An image embed (PROTOCOL.md §4.8): a file at `url`, shown from its `og.image`. `url` is on the scene's own origin,
@@ -61,11 +77,14 @@ export class Script {
 		return this;
 	}
 
-	/** A user as a record carries it (PROTOCOL.md §3.3.1): its id, name and roles. */
+	/**
+	 * A user as a record carries it (PROTOCOL.md §3.3.1): its id, name and roles. Not its avatar: clients show each
+	 * field from the user object they keep, which the listing's `users` gives them, avatar and all.
+	 */
 	#from(user_id) {
 		const user = this.#users.get(user_id);
 		if (!user) throw new Error(`unknown user ${user_id}`);
-		return { user_id, ...(user.name ? { name: user.name } : {}), ...(user.avatar ? { avatar: user.avatar } : {}), ...(user.roles ? { roles: user.roles } : {}) };
+		return { user_id, ...(user.name ? { name: user.name } : {}), ...(user.roles ? { roles: user.roles } : {}) };
 	}
 
 	#room(room_id) {
@@ -182,7 +201,8 @@ export class Script {
 	/**
 	 * The archive, as JSON Lines: a header with the scene's `title`, `description`, `avatar` and the `room` it opens
 	 * on, the listing, then
-	 * each record, then the scene extensions (`activity`, `live`), which other readers of archives skip.
+	 * each record, then the scene extensions (`activity`, `live`), which other readers of archives skip. Pictures on
+	 * the scene's origin (avatars, images) carry a hash of their file (`versioned`).
 	 */
 	archive({ server, title, description, avatar, room, exported_at, media }) {
 		const header = {
@@ -215,6 +235,7 @@ export class Script {
 			...(this.#activity.length ? [{ activity: this.#activity }] : []),
 			...(Object.keys(this.#live).length ? [{ live: this.#live }] : []),
 		];
-		return lines.map((line) => JSON.stringify(line)).join("\n") + "\n";
+		const pictures = /"(https:\/\/scene\.apron\.chat\/[^"?]+\.(?:png|jpe?g|gif|webp))"/g;
+		return lines.map((line) => JSON.stringify(line).replace(pictures, (_, url) => JSON.stringify(versioned(url)))).join("\n") + "\n";
 	}
 }
