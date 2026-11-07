@@ -9,9 +9,17 @@
 	"compatibility_date": "2026-08-15",
 	"workers_dev": false,
 	"preview_urls": true,
-	// Pull request builds run `wrangler preview`, which requires this block. It
-	// is empty because Previews need no settings of their own.
-	"previews": {},
+	// Pull request builds run `wrangler preview`. A Preview gets none of the
+	// bindings below unless they are declared here too: each Preview has its
+	// own SceneServer namespace, and its own rate limit namespace.
+	"previews": {
+		"durable_objects": {
+			"bindings": [{ "name": "SCENE", "class_name": "SceneServer" }]
+		},
+		"ratelimits": [
+			{ "name": "CONNECTIONS", "namespace_id": "74002", "simple": { "limit": 30, "period": 60 } }
+		]
+	},
 	"routes": [{ "pattern": "scene.apron.chat", "custom_domain": true }],
 	"build": { "command": "npm run build" },
 	// /<name>.jsonl is the scene's file, served without running the Worker.
