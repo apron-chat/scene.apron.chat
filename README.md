@@ -160,7 +160,9 @@ To write the file:
   scene.
 - **Convert an apron.chat fixture**: add its `.js` to
   `scripts/scenes/fixtures/`, give it a title in `fixtures.mjs`, and run
-  `node scripts/scenes/fixtures.mjs <name>`.
+  `node scripts/scenes/fixtures.mjs <name>`. Pictures in the scene's directory add what
+  a fixture doesn't have: `<user_id>.png` becomes that user's avatar, and
+  `scene.png` the scene's own (`scripts/scenes/piper-art.mjs` draws piper's).
 
 ### The file
 
