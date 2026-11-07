@@ -22,28 +22,38 @@ Who, What and I Don't Know.
 
 ## What a client sees
 
-The server follows ARCHIVE.md §4 (Serving), with one addition: it doesn't wait
-to be asked.
+A scene is a replay: the server compiles the archive once per isolate into
+fixed frames, sends them, and asks the client for nothing. A client can't be
+stopped from asking for some things, so those few answers are worked out up
+front too; serving a request only writes its `id` into a precomputed string.
 
 1. On connect: a `server` frame with `auth: ["guest"]`, `ping: 45`, the scene's
-   `title` and `description`, and the capabilities `history`, `rooms`,
-   `reactions`, `ext:settings` (`read_cursors: false`), `ext:permissions`,
-   `ext:archive`, and `ext:bio` when a user has a bio.
-2. `auth` with scheme `guest` signs in as the header's `you` (or a `viewer`),
-   with `ext.permissions` `{write: false, add_members: false, move_any: false}`.
-   Nothing lifts it: no other scheme is offered.
-3. Right after the `auth` result, the scene is pushed: a `user` notification
-   for each user, then every record of the rooms `you` joined, in `log_id`
-   order, as the live deliveries (`message`, `reactions`, `room_update`
-   memberships) a member would have seen. A core-only client, one with no
-   `rooms` or `history`, sees the whole scene from this alone.
-4. `room_list` and `history` are answered from the scene for clients that page,
-   as any server would. A client that follows recovery (PROTOCOL.md §4.3.5)
-   drops the pushed records at or below each room's `latest_log_id`, so they
-   don't show as new.
+   `title` and `description`, and the capabilities `rooms`, `reactions`,
+   `ext:settings` (`read_cursors: false`), `ext:permissions`, `ext:archive`,
+   and `ext:bio` when a user has a bio. **Not `history`**: a client with it
+   would page each room; without it, a client shows what arrived live, which
+   is everything.
+2. `auth`, which every client sends: it's answered with the header's `you` (or
+   a `viewer`), with `ext.permissions` `{write: false, add_members: false,
+   move_any: false}`. Nothing lifts it: no scheme besides `guest` is offered.
+3. Right after that reply, unasked: a `room_update` with every room `you`
+   joined (records and members) and every user, then every record of the
+   scene, in `log_id` order, as the live deliveries a member would have seen
+   (`message`, `reactions`, `room_update` memberships). The records of rooms
+   `you` didn't join come too: a client accepts a record at any time.
+4. `room_list`, which a client with `rooms` sends after `auth` in a few shapes
+   (joined, not joined, the threads of each room): every shape is
+   precomputed, keyed by `filter`, `members`, and `room_id` or
+   `parent_room_id`.
 5. Everything that would change something (`message`, `reactions`,
-   `room_join`, `me`, `command`, ...) is `denied`; other methods are
-   `unsupported`.
+   `room_join`, `me`, `command`, ...) is `denied`; `history` and anything else
+   is `unsupported`.
+
+The stream comes after the `auth` reply rather than on connect, because the
+protocol puts a sign-in's deliveries after its result (PROTOCOL.md §3.2.2).
+apron-web, given the stream before it signed in, took it for an earlier
+connection's and marked a gap ("Reconnected · earlier messages aren't
+available"). Every client sends `auth`, so it costs nothing.
 
 Then the connection goes idle. Pings are answered by the runtime, without
 running any code.
@@ -55,9 +65,10 @@ Hibernation API. What a viewer costs:
 
 - **Connecting:** one Worker request and one Durable Object request. Unknown
   scene names are refused by the Worker, before any object is reached.
-- **Reading:** a handful of frames (`auth`, `room_list`, a `history` page per
-  room), which Cloudflare bills at 20 frames per request. The object parses
-  the scene once per isolate, from the Worker bundle: no storage, no fetch.
+- **Reading:** `auth` and a few `room_list`s (six from apron-web), which
+  Cloudflare bills at 20 frames per request. Each is a lookup and a string
+  write. The object compiles the scene once per isolate, from the Worker
+  bundle: no storage, no fetch.
 - **Staying open:** nothing. `{"method":"ping"}` is answered with
   `{"method":"pong"}` by `setWebSocketAutoResponse`, which never wakes the
   object. The object keeps no alarms, timers or storage, so it hibernates
@@ -72,7 +83,7 @@ Limits, against a client that misbehaves:
   checked in the Worker. Past it, the handshake is refused, and a client that
   asks why (`?apron_connection_status=1`, apron-web EXT.md §5) is told to wait
   a minute.
-- Frames over 4 KiB close the connection. After 300 frames (pings not
+- Frames over 4 KiB close the connection. After 100 frames (pings not
   counted), the connection gets `retry_after` and is closed.
 
 ## Scenes

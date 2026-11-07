@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareLogIds, parseScene, SceneError } from "../src/scene";
+import { parseScene, roomListKey, SceneError } from "../src/scene";
 import { SCENES } from "../src/scenes.gen";
 import { SCENE_NAME } from "../src/scenes";
 
@@ -47,12 +47,6 @@ describe.each(Object.entries(SCENES))("scenes/%s.jsonl", (name, text) => {
 		expect(users.has(scene.you.user_id as string)).toBe(true);
 	});
 
-	it("lists each room's latest record as its latest_log_id", () => {
-		for (const room of scene.rooms.values()) {
-			const last = room.entries.at(-1);
-			expect(last && compareLogIds(last.log, room.latest)).toBe(0);
-		}
-	});
 });
 
 describe("parseScene", () => {
@@ -61,7 +55,7 @@ describe("parseScene", () => {
 		expect(() => parseScene('{"apron_archive":2}\n')).toThrow(SceneError);
 	});
 
-	it("reads an archive without `you` as a viewer, without a listing's log_id, and skips junk", () => {
+	it("reads an archive without `you` as a viewer, and skips junk", () => {
 		const scene = parseScene(
 			[
 				'{"apron_archive":1}',
@@ -74,11 +68,10 @@ describe("parseScene", () => {
 		);
 		expect(scene.you).toMatchObject({ user_id: "viewer", ext: { permissions: { write: false } } });
 		expect(scene.users.get("ada")).toEqual({ user_id: "ada", name: "Ada" });
-		const room = scene.rooms.get("general")!;
-		expect(room.record.log_id).toBe("99");
-		expect(room.entries.map((entry) => entry.log)).toEqual(["100", "102"]);
-		// A reference outside any listed room is embedded, not served.
-		expect((room.entries[1]!.record.reply_to as any).body.text).toBe("ref");
-		expect(scene.pushed.filter((frame) => frame.startsWith('{"method":"message"'))).toHaveLength(2);
+		// A message outside any listed room is only embedded, in the reply to it.
+		const messages = scene.pushed.map((frame) => JSON.parse(frame)).filter((frame) => frame.method === "message");
+		expect(messages.map((frame) => frame.params.message_id)).toEqual(["100", "102"]);
+		expect(messages[1].params.reply_to.body.text).toBe("ref");
+		expect(JSON.parse(scene.replies.get(roomListKey({}))!)).toEqual({ joined: [{ room_id: "general", title: "General" }], not_joined: [] });
 	});
 });

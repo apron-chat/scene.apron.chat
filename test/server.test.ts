@@ -43,101 +43,92 @@ async function connect(path = "/whosonfirst", ip = `192.0.2.${Math.floor(Math.ra
 	};
 }
 
-async function signIn(peer: Awaited<ReturnType<typeof connect>>) {
+/** The `server` frame, the reply to `auth`, and what follows it unasked: the scene. */
+async function opening(peer: Awaited<ReturnType<typeof connect>>) {
 	const server = await peer.next();
 	peer.send({ method: "auth", id: "a1", params: { scheme: "guest" } });
-	const frames = await peer.next();
-	return { server, auth: frames };
+	const auth = await peer.next();
+	// A marker after the stream: whatever comes before its reply was sent unasked.
+	peer.send({ method: "room_list", id: "marker", params: {} });
+	const frames = await peer.until("marker");
+	return { server, auth, pushed: frames.slice(0, -1) };
 }
 
+const logOf = (frame: Frame): string => frame.params.log_id ?? frame.params.memberships[0].log_id;
+
 describe("a scene over the protocol", () => {
-	it("greets with a read-only server frame", async () => {
+	it("sends the whole scene as the connection signs in, unasked", async () => {
 		const peer = await connect();
-		const server = await peer.next();
-		expect(server.method).toBe("server");
-		expect(server.params).toMatchObject({ apron: 10, auth: ["guest"], ping: 45, title: "Who's on First?" });
-		expect(server.params.capabilities).toEqual(["history", "rooms", "reactions", "ext:settings", "ext:permissions", "ext:archive", "ext:bio"]);
-		expect(server.params.ext).toEqual({ settings: { read_cursors: false }, archive: { server: "wss://scene.apron.chat/whosonfirst" } });
-		peer.close();
-	});
+		const { server, auth, pushed } = await opening(peer);
+		const [rooms, ...records] = pushed;
+		expect(server!.method).toBe("server");
+		expect(server!.params).toMatchObject({ apron: 10, auth: ["guest"], ping: 45, title: "Who's on First?" });
+		// Nothing to page: everything is here.
+		expect(server!.params.capabilities).toEqual(["rooms", "reactions", "ext:settings", "ext:permissions", "ext:archive", "ext:bio"]);
+		expect(server!.params.ext).toEqual({ settings: { read_cursors: false }, archive: { server: "wss://scene.apron.chat/whosonfirst" } });
 
-	it("signs in as the scene's reader, allowed only to read, then pushes the scene", async () => {
-		const peer = await connect();
-		await peer.next();
-		peer.send({ method: "auth", id: "a1", params: { scheme: "guest" } });
-		const auth = await peer.next();
-		expect(auth.id).toBe("a1");
+		expect(rooms!.method).toBe("room_update");
+		expect(rooms!.params.joined.map((room: any) => room.room_id).sort()).toEqual(["dugout", "i-dont-know", "lineup", "whos-on-first"]);
+		expect(rooms!.params.joined.find((room: any) => room.room_id === "whos-on-first")).toMatchObject({ parent_room_id: "dugout", title: "Who's on first" });
+		expect(rooms!.params.joined[0].members.map((member: any) => member.user_id)).toContain("bleachers");
+		expect(rooms!.params.users.find((user: any) => user.user_id === "who")).toMatchObject({ name: "Who", roles: ["1B"], ext: { bio: "First base." } });
+
+		// Every record, in log order, as live deliveries; the rooms you haven't joined too.
+		expect(new Set(records.map((frame) => frame.method))).toEqual(new Set(["message", "reactions", "room_update"]));
+		const logs = records.map(logOf);
+		expect(logs).toEqual([...logs].sort((a, b) => a.length - b.length || a.localeCompare(b)));
+		const messages = records.filter((frame) => frame.method === "message");
+		expect(new Set(messages.map((frame) => frame.params.room_id))).toEqual(new Set(["dugout", "i-dont-know", "lineup", "whos-on-first", "bullpen"]));
+		expect(messages.length).toBeGreaterThan(90);
+		// A reply carries the snapshot it replies to; an edit and a deletion are later snapshots.
+		expect(messages.find((frame) => frame.params.reply_to)!.params.reply_to.from).toBeDefined();
+		expect(messages.some((frame) => frame.params.deleted === true)).toBe(true);
+		expect(messages.some((frame) => frame.params.prev_log_id && !frame.params.deleted)).toBe(true);
+
 		expect(auth.result.you).toMatchObject({ user_id: "bleachers", name: "Bleachers", ext: { permissions: { write: false, add_members: false, move_any: false } } });
-		// A marker after the push: everything before it was pushed unasked.
-		peer.send({ method: "room_list", id: "marker", params: {} });
-		const pushed = (await peer.until("marker")).slice(0, -1);
-		const methods = new Set(pushed.map((frame) => frame.method));
-		expect([...methods].sort()).toEqual(["message", "reactions", "room_update", "user"]);
-		const users = pushed.filter((frame) => frame.method === "user").map((frame) => frame.params.new.user_id);
-		expect(users).toContain("who");
-		expect(users).not.toContain("bleachers");
-		// Records of joined rooms only, in log order.
-		const records = pushed.filter((frame) => frame.method !== "user").map((frame) => frame.params.log_id ?? frame.params.memberships[0].log_id);
-		expect(records).toEqual([...records].sort((a, b) => a.length - b.length || a.localeCompare(b)));
-		const rooms = new Set(pushed.filter((frame) => frame.method === "message").map((frame) => frame.params.room_id));
-		expect([...rooms].sort()).toEqual(["dugout", "i-dont-know", "lineup", "whos-on-first"]);
-		// A reply carries the snapshot it replies to.
-		const reply = pushed.find((frame) => frame.method === "message" && frame.params.reply_to)!;
-		expect(reply.params.reply_to.from).toBeDefined();
 		peer.close();
 	});
 
-	it("lists rooms and pages history like a server", async () => {
+	it("answers the room listings a client asks for", async () => {
 		const peer = await connect();
-		await signIn(peer);
-		peer.send({ method: "room_list", id: "r1", params: { members: true } });
-		const list = (await peer.until("r1")).at(-1)!.result;
-		expect(list.joined.map((room: any) => room.room_id).sort()).toEqual(["dugout", "i-dont-know", "lineup", "whos-on-first"]);
-		expect(list.not_joined.map((room: any) => room.room_id)).toEqual(["bullpen"]);
-		const dugout = list.joined.find((room: any) => room.room_id === "dugout");
-		expect(dugout).toMatchObject({ title: "Dugout", history_log_id: dugout.log_id });
-		expect(dugout.members.map((member: any) => member.user_id)).toContain("bleachers");
-		expect(list.users.find((user: any) => user.user_id === "who")).toMatchObject({ name: "Who", roles: ["1B"] });
-
-		// Threads of the dugout.
-		peer.send({ method: "room_list", id: "r2", params: { parent_room_id: "dugout" } });
-		const threads = (await peer.until("r2")).at(-1)!.result;
-		expect(threads.joined.map((room: any) => room.title).sort()).toEqual(["I Don't Know", "Who's on first"]);
-
-		// The newest page, then older ones to the start, which gather every record of the room once.
-		const seen = new Set<string>();
-		let before: string | undefined;
-		for (let page = 0; ; page++) {
-			peer.send({ method: "history", id: `h${page}`, params: { room_id: "dugout", limit: 25, ...(before ? { before } : {}) } });
-			const result = (await peer.until(`h${page}`)).at(-1)!.result;
-			expect(result.latest_log_id).toBe(dugout.latest_log_id);
-			for (const kind of ["rooms", "messages", "reactions", "memberships"]) for (const record of result[kind]) seen.add(`${kind}:${record.log_id}`);
-			if (!result.more) break;
-			before = String(Number(result.first_log_id) - 1);
-		}
-		expect([...seen].filter((key) => key.startsWith("messages:")).length).toBeGreaterThan(60);
-		expect(seen.has(`rooms:${dugout.log_id}`)).toBe(true);
-
-		// A room you haven't joined reads through its history too.
-		peer.send({ method: "history", id: "b1", params: { room_id: "bullpen", after: "1" } });
-		const bullpen = (await peer.until("b1")).at(-1)!.result;
-		expect(bullpen.messages.length).toBe(8);
-		expect(bullpen.more).toBe(false);
-
-		peer.send({ method: "history", id: "x1", params: { room_id: "nowhere" } });
-		expect((await peer.until("x1")).at(-1)!.error.code).toBe(-32602);
+		await opening(peer);
+		const ask = async (params: object) => {
+			const id = `r${Math.random()}`;
+			peer.send({ method: "room_list", id, params });
+			return (await peer.until(id)).at(-1)!;
+		};
+		const joined = (await ask({ filter: "joined", members: true })).result;
+		expect(Object.keys(joined)).toEqual(["joined", "users"]);
+		expect(joined.joined).toHaveLength(4);
+		expect(joined.users.map((user: any) => user.user_id)).toContain("bleachers");
+		const others = (await ask({ filter: "not_joined", members: true, user_id: "who" })).result;
+		expect(others.not_joined.map((room: any) => room.room_id)).toEqual(["bullpen"]);
+		const threads = (await ask({ parent_room_id: "dugout", filter: "not_joined" })).result;
+		expect(threads).toEqual({ not_joined: [] });
+		const all = (await ask({ parent_room_id: "dugout" })).result;
+		expect(all.joined.map((room: any) => room.title).sort()).toEqual(["I Don't Know", "Who's on first"]);
+		expect(all.joined[0].members).toBeUndefined();
+		const one = (await ask({ room_id: "bullpen", members: true })).result;
+		expect(one.not_joined[0]).toMatchObject({ room_id: "bullpen", members: [{ user_id: "tomorrow" }, { user_id: "today" }] });
+		expect((await ask({ room_id: "nowhere" })).error.code).toBe(-32602);
 		peer.close();
 	});
 
 	it("refuses everything that would change something", async () => {
 		const peer = await connect();
-		await peer.next();
-		peer.send({ method: "message", id: "m0", params: { room_id: "dugout", body: { text: "early" } } });
+		expect((await peer.next()).method).toBe("server");
+		peer.send({ method: "room_list", id: "early", params: {} });
 		expect((await peer.next()).error.code).toBe(-32001);
-		peer.send({ method: "auth", id: "a1", params: { scheme: "token", token: "x" } });
-		expect((await peer.next()).error.code).toBe(-32601);
+		peer.send({ method: "auth", id: "t1", params: { scheme: "token", token: "x" } });
+		expect((await peer.until("t1")).at(-1)!.error.code).toBe(-32601);
 		peer.send({ method: "auth", id: "a2", params: { scheme: "guest" } });
 		expect((await peer.next()).result.you.user_id).toBe("bleachers");
+		peer.send({ method: "me", id: "drain", params: {} });
+		await peer.until("drain");
+		// Signing in again as the same reader sends nothing more.
+		peer.send({ method: "auth", id: "a3", params: { scheme: "guest" } });
+		peer.send({ method: "me", id: "after", params: {} });
+		expect((await peer.until("after")).map((frame) => frame.id)).toEqual(["a3", "after"]);
 		for (const [method, params] of [
 			["message", { room_id: "dugout", body: { text: "Who's on first?" } }],
 			["reactions", { message_id: "1", emojis: ["👍"] }],
@@ -148,14 +139,16 @@ describe("a scene over the protocol", () => {
 			peer.send({ method, id: method, params });
 			expect((await peer.until(method)).at(-1)!.error.code).toBe(-32001);
 		}
-		peer.send({ method: "push_shiny", id: "u1", params: {} });
-		expect((await peer.until("u1")).at(-1)!.error.code).toBe(-32601);
+		for (const method of ["history", "push_shiny"]) {
+			peer.send({ method, id: method, params: {} });
+			expect((await peer.until(method)).at(-1)!.error.code).toBe(-32601);
+		}
 		peer.close();
 	});
 
 	it("answers pings, and closes a connection that sends too much", async () => {
 		const peer = await connect();
-		await peer.next();
+		await opening(peer);
 		peer.send(PING);
 		expect((await peer.next()).method).toBe("pong");
 		peer.send({ method: "ping" });
@@ -165,8 +158,8 @@ describe("a scene over the protocol", () => {
 		expect(peer.closed()?.code).toBe(1009);
 
 		const loop = await connect();
-		await loop.next();
-		for (let i = 0; i <= MAX_FRAMES; i++) loop.send({ method: "activity", params: { typing: 1 } });
+		await opening(loop);
+		for (let i = 0; i < MAX_FRAMES; i++) loop.send({ method: "activity", params: { typing: 1 } });
 		const last = await loop.next();
 		expect(last.error.code).toBe(-32002);
 		await new Promise((resolve) => setTimeout(resolve, 50));

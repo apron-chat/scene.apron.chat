@@ -39,7 +39,7 @@ export default {
 function index(url: URL): Response {
 	const rows = sceneNames()
 		.map((name) => {
-			const title = JSON.parse(loadScene(name)!.server).params.title ?? name;
+			const title = loadScene(name)!.title ?? name;
 			return `<li><a href="/${name}">${escape(title)}</a> <code>${escape(`wss://${url.host}/${name}`)}</code> <a href="/${name}.jsonl">jsonl</a></li>`;
 		})
 		.join("\n");
