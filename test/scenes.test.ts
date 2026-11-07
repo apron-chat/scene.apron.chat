@@ -29,11 +29,20 @@ describe.each(Object.entries(FILES))("scenes/%s.jsonl", (name, text) => {
 	});
 
 	it("names only media it has, on its own origin", () => {
-		const urls = [...text.matchAll(/"(?:url|avatar)":"([^"]+)"/g)].map((match) => match[1]!);
-		expect(urls.length).toBeGreaterThan(0);
-		for (const url of urls) {
-			expect(url.startsWith(`${CANONICAL_ORIGIN}/${name}/`), `${url} isn't on ${CANONICAL_ORIGIN}/${name}/`).toBe(true);
+		const scene = compileScene(text);
+		const own = `${CANONICAL_ORIGIN}/${name}/`;
+		// Images load only from the server's origin (PROTOCOL.md §4.8.1): avatars and `og` media are files here.
+		const media = [...text.matchAll(/"avatar":"([^"]+)"|"(?:image|video|audio)":\{[^{}]*"url":"([^"]+)"/g)].map((match) => (match[1] ?? match[2])!);
+		for (const url of media) {
+			expect(url.startsWith(own), `${url} isn't on ${own}`).toBe(true);
 			expect(SERVED.has(url.slice(CANONICAL_ORIGIN.length)), `${url} isn't a file in scenes/`).toBe(true);
+		}
+		// Any other URL on its origin is a file here, or its live text. A link elsewhere is a link.
+		for (const [, url] of text.matchAll(/"url":"([^"]+)"/g)) {
+			if (!url!.startsWith(CANONICAL_ORIGIN)) continue;
+			const live = url!.startsWith(`${own}live/`) ? url!.slice(`${own}live/`.length) : undefined;
+			if (live !== undefined) expect(Object.hasOwn(scene.live, live), `${url} names no live text`).toBe(true);
+			else expect(SERVED.has(url!.slice(CANONICAL_ORIGIN.length)), `${url} isn't a file in scenes/`).toBe(true);
 		}
 	});
 
@@ -88,7 +97,8 @@ describe("parseScene", () => {
 			].join("\n"),
 		);
 		expect(scene.you).toMatchObject({ user_id: "viewer", ext: { permissions: { write: false } } });
-		expect(scene.users.get("ada")).toEqual({ user_id: "ada", name: "Ada" });
+		// A scene keeps a user's `status`: its presence, which an archive leaves out.
+		expect(scene.users.get("ada")).toEqual({ user_id: "ada", name: "Ada", status: "online" });
 		// A message outside any listed room is only embedded, in the reply to it.
 		const messages = scene.pushed.map((frame) => JSON.parse(frame)).filter((frame) => frame.method === "message");
 		expect(messages.map((frame) => frame.params.message_id)).toEqual(["100", "102"]);

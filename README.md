@@ -30,6 +30,7 @@ front too; serving a request only writes its `id` into a precomputed string.
 1. On connect: a `server` frame with `auth: ["guest"]`, the scene's `title`,
    `description` and `avatar`, and the capabilities `rooms`, `reactions`,
    `ext:settings` (`read_cursors: false`), `ext:permissions`, `ext:archive`,
+   `status` when users have presence, `activity` when the scene has typing,
    `ext:media` when the header names `media` origins, and `ext:bio` when a
    user has a bio. **No `ping`**: a client then sends none. **Not `history`**: a client with it
    would page each room; without it, a client shows what arrived live, which
@@ -45,7 +46,8 @@ front too; serving a request only writes its `id` into a precomputed string.
 4. `room_list`, which a client with `rooms` sends after `auth` in a few shapes
    (joined, not joined, the threads of each room): every shape is
    precomputed, keyed by `filter`, `members`, and `room_id` or
-   `parent_room_id`.
+   `parent_room_id`. With presence, a `status` request (an idle report) is
+   answered `{}`.
 5. Everything that would change something (`message`, `reactions`,
    `room_join`, `me`, `command`, ...) is `denied`; `history` and anything else
    is `unsupported`.
@@ -116,28 +118,68 @@ them.
 
 ## Scenes
 
-Each `scenes/<name>.jsonl` is a scene. Its name is lowercase letters, digits
-and dashes. `npm run build` compiles them into the Worker, and `npm test`
-checks that each one is complete: every record is in a listed room, and every
-author, mention, member, reply and parent room it refers to is in it.
+| scene | what it shows |
+|---|---|
+| [`whosonfirst`](https://scene.apron.chat/whosonfirst) | the old ballpark routine in a team chat: mentions, reactions, joins and leaves, threads, an edit, a deletion, avatars, an image |
+| [`team`](https://scene.apron.chat/team) | a small team's General room: a thread, a bot, an admin, replies, a code block, reactions, presence |
+| [`agent`](https://scene.apron.chat/agent) | a coding agent in a thread, with a finished terminal run and a live one |
+| [`rich`](https://scene.apron.chat/rich) | an uploaded image, a mention, a link preview, reactions, typing |
+| [`piper`](https://scene.apron.chat/piper) | a terminal benchmark, a link preview, a bot, replies, a mention, a thread and DMs |
 
-A scene is an ordinary archive, with three optional keys in its header for
-the `server` frame (PROTOCOL.md §3.1): `title`, `description` and `avatar`.
-Readers of archives ignore keys they don't know.
+`team`, `agent`, `rich` and `piper` are apron.chat's screenshot scenes
+(`screenshot/scenes/` there), copied unchanged into `scripts/scenes/fixtures/`
+and converted by `scripts/scenes/fixtures.mjs`.
+
+### Adding a scene
+
+1. Write `scenes/<name>.jsonl`. Its name is lowercase letters, digits and
+   dashes, and is its address: `wss://scene.apron.chat/<name>`.
+2. Put its pictures, if any, in `scenes/<name>/` ([Media](#media)).
+3. Run `npm test`. It compiles every scene, and checks that each one is
+   complete: every record is in a listed room; every author, mention, member,
+   reply and parent room it names is in it; every picture it names is a file
+   in `scenes/<name>/`; and every live URL names its live text.
+4. Look at it: `npm run dev`, and open it in a client
+   ([Develop](#develop)).
+
+Nothing else lists scenes: the build finds them, and the index page, the
+redirect and the server serve whatever it found.
+
+To write the file:
+
+- **Export it from apron-web**, from a real or a scratch server.
+- **Script it** with `scripts/scenes/lib.mjs`, which keeps `log_id`s,
+  listings and members consistent: `scripts/scenes/whosonfirst.mjs` is an
+  example. Add the script to `npm run scenes`, which writes every scripted
+  scene.
+- **Convert an apron.chat fixture**: add its `.js` to
+  `scripts/scenes/fixtures/`, give it a title in `fixtures.mjs`, and run
+  `node scripts/scenes/fixtures.mjs <name>`.
+
+### The file
+
+A scene is an ordinary archive (apron-web's ARCHIVE.md). A few extensions add
+what a screenshot needs and an archive leaves out; readers of archives ignore
+them.
 
 ```jsonl
-{"apron_archive":1,"server":"wss://scene.apron.chat/demo","you":{"user_id":"viewer","name":"Viewer"},"title":"Demo","description":"A scene."}
-{"joined":[{"room_id":"general","log_id":"1774546201000","title":"General","latest_log_id":"1774546230000","history_log_id":"1774546201000","members":[{"user_id":"ada"},{"user_id":"viewer"}]}],"not_joined":[],"users":[{"user_id":"ada","name":"Ada"},{"user_id":"viewer","name":"Viewer"}]}
+{"apron_archive":1,"server":"wss://scene.apron.chat/demo","you":{"user_id":"viewer","name":"Viewer"},"title":"Demo","description":"A scene.","room":"general"}
+{"joined":[{"room_id":"general","log_id":"1774546201000","title":"General","latest_log_id":"1774546230000","history_log_id":"1774546201000","members":[{"user_id":"ada"},{"user_id":"viewer"}]}],"not_joined":[],"users":[{"user_id":"ada","name":"Ada","status":"online"},{"user_id":"viewer","name":"Viewer"}]}
 {"messages":[{"message_id":"1774546230000","log_id":"1774546230000","room_id":"general","from":{"user_id":"ada","name":"Ada"},"body":{"text":"Hi!"}}]}
+{"activity":[{"room_id":"general","from":{"user_id":"ada","name":"Ada"},"typing":600}]}
 ```
 
-To make one:
+| where | key | what it does |
+|---|---|---|
+| header | `title`, `description`, `avatar` | the `server` frame's (PROTOCOL.md §3.1) |
+| header | `room` | the room or thread that `/<name>` opens on |
+| `users` | `status` (and `seen`) | presence: the server advertises `status`, and sends each user's status at sign-in (§4.5.4). An archive leaves these out |
+| part | `activity` | `activity` notifications' params, such as typing, sent after everything else; the server advertises `activity` |
+| part | `live` | live text by id, `{"<id>": [[ms, "text"], ...]}`, served at `/<name>/live/<id>`: each chunk after its wait, then held open for 30 minutes, so a `terminal` or `append` embed whose `url` is there shows it live |
 
-- **Export it from apron-web**, from a real or a
-  scratch server.
-- **Script it**, with `scripts/scenes/lib.mjs`, which keeps `log_id`s,
-  listings and members consistent. `scripts/scenes/whosonfirst.mjs` writes
-  `whosonfirst.jsonl`: run `npm run scenes` after changing it.
+Times are fixed: a scene shows the dates its `log_id`s say. For a screenshot
+that should look recent, set the browser's clock to the scene's time (with
+Playwright, `page.clock.setFixedTime`).
 
 ### Media
 
@@ -163,9 +205,10 @@ which every client can show. `scripts/scenes/whosonfirst-art.mjs` draws
 
 ### Readers
 
-The `you` of a scene is who reads it. Make it a member of the rooms it
-joined, without a membership record, so it reads as someone who came to
-watch.
+The `you` of a scene is who reads it: one of its people, as Ada is in the
+fixtures, whose messages show as the reader's own; or someone who came to
+watch, as Bleachers is in `whosonfirst`, a member of the rooms it joined
+without a record of joining.
 
 ## Develop
 

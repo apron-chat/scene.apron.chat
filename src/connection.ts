@@ -76,6 +76,9 @@ export function serve(scene: CompiledScene): Response {
 			const key = roomListKey(params);
 			if (Object.hasOwn(scene.replies, key)) reply(scene.replies[key]!);
 			else fail(-32602, "This scene has no such room.");
+		} else if (frame.method === "status" && scene.status !== undefined) {
+			// With presence (`status`), clients report idle connections; nothing here changes for it (PROTOCOL.md §4.5.3).
+			reply(scene.status);
 		} else if (WRITES.has(frame.method)) {
 			fail(-32001, "This scene is read-only: nothing in it can change.");
 		} else {
@@ -92,4 +95,55 @@ export function serve(scene: CompiledScene): Response {
 
 	server.send(scene.server);
 	return new Response(null, { status: 101, webSocket: client });
+}
+
+/**
+ * How long live text stays open after its last chunk: as long as it is open, a client shows it as live, as a writer
+ * that hasn't finished. An open response that sends nothing costs a Worker nothing, so this only bounds it.
+ */
+export const LIVE_HOLD_MS = 30 * 60_000;
+
+/**
+ * A scene's live text (scene extension `live`): each chunk written after its wait, as a writer would have sent it,
+ * served as PROTOCOL.md §4.8.5 says. Then it stays open for `LIVE_HOLD_MS`, and ends. The embed keeps its `url`, so
+ * a client keeps what it showed until a snapshot ends the text (§4.8.5), which never comes.
+ */
+export function serveLive(chunks: readonly [number, string][], holdMs = LIVE_HOLD_MS): Response {
+	const encoder = new TextEncoder();
+	let next = 0;
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	let wake: (() => void) | undefined;
+	const sleep = (ms: number) => new Promise<void>((resolve) => {
+		wake = resolve;
+		timer = setTimeout(resolve, ms);
+	});
+	const body = new ReadableStream<Uint8Array>({
+		async pull(controller) {
+			const chunk = chunks[next++];
+			if (!chunk) {
+				// Held open, as a writer still at work; ended early when the reader goes (`cancel`).
+				if (next === chunks.length + 1 && holdMs > 0) await sleep(holdMs);
+				return controller.close();
+			}
+			const [wait, text] = chunk;
+			if (wait > 0) await sleep(Math.min(wait, 10_000));
+			controller.enqueue(encoder.encode(text));
+		},
+		cancel() {
+			if (timer !== undefined) clearTimeout(timer);
+			wake?.();
+		},
+	});
+	return new Response(body, {
+		headers: {
+			"Content-Type": "text/plain; charset=utf-8",
+			// Not compressed, which would hold each small chunk back until the stream ends: `no-transform` tells
+			// proxies (PROTOCOL.md §4.8.5), and `identity` the Workers runtime, which compresses for a client that
+			// accepts it otherwise.
+			"Content-Encoding": "identity",
+			"X-Content-Type-Options": "nosniff",
+			"Cache-Control": "no-store, no-transform",
+			"Access-Control-Allow-Origin": "*",
+		},
+	});
 }

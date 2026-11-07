@@ -172,6 +172,74 @@ describe("a scene over the protocol", () => {
 	});
 });
 
+describe("scene extensions", () => {
+	it("shows presence: the status capability, each user's status, and idle reports answered", async () => {
+		const peer = await connect("/team");
+		const { server, auth, pushed } = await opening(peer);
+		expect(server.params.capabilities).toContain("status");
+		expect(auth.result.you).toMatchObject({ user_id: "ada", status: "online" });
+		expect(pushed[0]!.params.users.find((user: any) => user.user_id === "tomas")).toMatchObject({ status: "idle" });
+		// After a sign-in, each other user's shown status, but offline ones (PROTOCOL.md §4.5.4).
+		const statuses = pushed.filter((frame) => frame.method === "user").map((frame) => frame.params.new);
+		expect(statuses).toContainEqual({ user_id: "tomas", status: "idle" });
+		expect(statuses.find((user: any) => user.user_id === "jun")).toBeUndefined();
+		expect(statuses.find((user: any) => user.user_id === "ada")).toBeUndefined();
+		peer.send({ method: "status", id: "idle", params: { idle: 300 } });
+		expect((await peer.until("idle")).at(-1)!.result).toEqual({});
+		peer.close();
+	});
+
+	it("shows typing, last", async () => {
+		const peer = await connect("/rich");
+		const { server, pushed } = await opening(peer);
+		expect(server.params.capabilities).toContain("activity");
+		expect(pushed.at(-1)).toEqual({ method: "activity", params: { room_id: "design", from: { user_id: "tomas", name: "Tomás" }, typing: 600 } });
+		peer.close();
+	});
+
+	it("leaves out what a scene doesn't have", async () => {
+		const peer = await connect("/whosonfirst");
+		const { server } = await opening(peer);
+		expect(server.params.capabilities).not.toContain("status");
+		expect(server.params.capabilities).not.toContain("activity");
+		peer.send({ method: "status", id: "idle", params: { idle: 300 } });
+		expect((await peer.until("idle")).at(-1)!.error.code).toBe(-32001);
+		peer.close();
+	});
+
+	it("serves live text on its timeline, which an embed follows", async () => {
+		const peer = await connect("/agent");
+		const { pushed } = await opening(peer);
+		const suite = pushed.find((frame) => frame.method === "message" && frame.params.body.embeds?.[0]?.url)!;
+		expect(suite.params.body.embeds[0]).toMatchObject({ kind: "terminal", title: "npm test", url: "https://scene.test/agent/live/suite" });
+		const finished = pushed.find((frame) => frame.method === "message" && frame.params.body.embeds?.[0]?.output)!;
+		expect(finished.params.body.embeds[0]).toMatchObject({ kind: "terminal", title: "npm test -- --repeat 50" });
+		peer.close();
+
+		// Held open after its last chunk, as live; read until the last chunk, then let go.
+		const response = await SELF.fetch("https://scene.test/agent/live/suite");
+		expect(response.status).toBe(200);
+		expect(response.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+		expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+		// Never compressed, which holds small chunks back until the stream ends.
+		expect(response.headers.get("Content-Encoding")).toBe("identity");
+		const reader = response.body!.pipeThrough(new TextDecoderStream()).getReader();
+		let text = "";
+		while (!text.includes("12/19")) {
+			const { done, value } = await reader.read();
+			expect(done).toBe(false);
+			text += value;
+		}
+		expect(text).toContain("tests/history.test.ts");
+		const held = await Promise.race([reader.read().then(() => "ended"), new Promise((resolve) => setTimeout(() => resolve("open"), 300))]);
+		expect(held).toBe("open");
+		await reader.cancel();
+		expect((await SELF.fetch("https://scene.test/agent/live/nope")).status).toBe(404);
+		expect((await SELF.fetch("https://scene.test/team/live/suite")).status).toBe(404);
+	});
+});
+
 describe("media", () => {
 	it("comes from the host the scene is served from", async () => {
 		for (const [host, origin] of [["scene.apron.chat", "https://scene.apron.chat"], ["scene.test", "https://scene.test"], ["preview.scene.test", "https://preview.scene.test"]]) {
@@ -193,10 +261,15 @@ describe("the Worker", () => {
 		const response = await SELF.fetch("https://scene.apron.chat/whosonfirst?room=dugout&utm=x", { redirect: "manual" });
 		expect(response.status).toBe(302);
 		expect(response.headers.get("Location")).toBe("https://link.apron.chat/#server=wss://scene.apron.chat/whosonfirst&room=dugout");
+		// Without a room, the scene's own: whosonfirst opens on the dugout, agent on its thread.
 		const slash = await SELF.fetch("https://scene.apron.chat/whosonfirst/", { redirect: "manual" });
-		expect(slash.headers.get("Location")).toBe("https://link.apron.chat/#server=wss://scene.apron.chat/whosonfirst");
+		expect(slash.headers.get("Location")).toBe("https://link.apron.chat/#server=wss://scene.apron.chat/whosonfirst&room=dugout");
+		const thread = await SELF.fetch("https://scene.apron.chat/agent?room=general", { redirect: "manual" });
+		expect(thread.headers.get("Location")).toBe("https://link.apron.chat/#server=wss://scene.apron.chat/agent&room=general");
+		const agent = await SELF.fetch("https://scene.apron.chat/agent", { redirect: "manual" });
+		expect(agent.headers.get("Location")).toBe("https://link.apron.chat/#server=wss://scene.apron.chat/agent&room=fix-reconnect");
 		const local = await SELF.fetch("http://localhost:8787/whosonfirst", { redirect: "manual" });
-		expect(local.headers.get("Location")).toBe("https://link.apron.chat/#server=ws://localhost:8787/whosonfirst");
+		expect(local.headers.get("Location")).toBe("https://link.apron.chat/#server=ws://localhost:8787/whosonfirst&room=dugout");
 	});
 
 	it("refuses unknown scenes without reaching an object", async () => {

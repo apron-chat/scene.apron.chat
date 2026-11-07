@@ -214,6 +214,7 @@ writeFileSync(
 		media: ["https://scene.apron.chat"],
 		avatar: `${MEDIA}/scene.png`,
 		title: "Who's on First?",
+		room: "dugout",
 		description: "Opening Day in the St. Louis Wolves dugout. The new assistant manager would just like to know the players' names.",
 	}),
 );

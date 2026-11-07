@@ -24,6 +24,8 @@ export class Script {
 	#rooms = new Map();
 	#records = [];
 	#messages = new Map();
+	#activity = [];
+	#live = {};
 
 	/**
 	 * @param {{ start: string, users: Record<string, object>, you?: string }} options
@@ -41,6 +43,22 @@ export class Script {
 	#next(seconds = 20) {
 		this.#at += Math.round(seconds * 1000);
 		return String(this.#at);
+	}
+
+	/** The time of the last record, in milliseconds. */
+	get now() {
+		return this.#at;
+	}
+
+	/**
+	 * Moves the clock to `time` (an ISO string or milliseconds), so that the next record is at `time` with `after: 0`.
+	 * Time only goes forward: a `time` before the last record is refused.
+	 */
+	at(time) {
+		const ms = typeof time === "number" ? time : Date.parse(time);
+		if (!(ms >= this.#at)) throw new Error(`at(${time}) is before the last record`);
+		this.#at = ms;
+		return this;
 	}
 
 	/** A user as a record carries it (PROTOCOL.md §3.3.1): its id, name and roles. */
@@ -69,15 +87,36 @@ export class Script {
 
 	/**
 	 * A room, or with `parent_room_id` a thread, made by `by` with `members` in it. `joined: false` lists it under
-	 * the rooms `you` hasn't joined, readable without joining.
+	 * the rooms `you` hasn't joined, readable without joining. `announce: false` lists its members without a record
+	 * of them joining, so the room shows no "joined" notice at its start.
 	 */
-	room(room_id, { joined = true, by, after = 1, ...fields }, members) {
+	room(room_id, { joined = true, by, after = 1, announce = true, ...fields }, members) {
 		const log_id = this.#next(after);
 		const record = { room_id, log_id, ...fields };
 		this.#rooms.set(room_id, { record, joined, members: new Set(), start: log_id, latest: log_id });
 		this.#records.push({ rooms: [record] });
-		this.#membership(room_id, [...new Set([...(by ? [by] : []), ...members])], true, 0.001);
+		const everyone = [...new Set([...(by ? [by] : []), ...members])];
+		if (announce) this.#membership(room_id, everyone, true, 0.001);
+		else for (const user_id of everyone) this.#room(room_id).members.add(user_id);
 		return room_id;
+	}
+
+	/**
+	 * `user_id` typing in a room when the scene is read, for `seconds` (scene extension `activity`, sent as PROTOCOL.md
+	 * §4.6's `activity` notification after everything else).
+	 */
+	typing(room_id, user_id, seconds = 600) {
+		this.#room(room_id);
+		this.#activity.push({ room_id, from: this.#from(user_id), typing: seconds });
+	}
+
+	/**
+	 * Live text (scene extension `live`): `chunks` of `[milliseconds to wait, text]`, served at `/<name>/live/<id>` as
+	 * a writer would have sent them. A `terminal` or `append` embed whose `url` is there shows them as they come, and
+	 * stays live.
+	 */
+	live(id, chunks) {
+		this.#live[id] = chunks;
 	}
 
 	join(room_id, user_id, after) {
@@ -139,8 +178,12 @@ export class Script {
 		this.#records.push({ reactions: [{ log_id, message_id, room_id: message.room_id, reactions: [{ from: this.#from(user_id), emojis }] }] });
 	}
 
-	/** The archive, as JSON Lines: a header with the scene's `title` and `description`, the listing, then each record. */
-	archive({ server, title, description, avatar, exported_at, media }) {
+	/**
+	 * The archive, as JSON Lines: a header with the scene's `title`, `description`, `avatar` and the `room` it opens
+	 * on, the listing, then
+	 * each record, then the scene extensions (`activity`, `live`), which other readers of archives skip.
+	 */
+	archive({ server, title, description, avatar, room, exported_at, media }) {
 		const header = {
 			apron_archive: 1,
 			...(server ? { server } : {}),
@@ -149,6 +192,7 @@ export class Script {
 			...(title ? { title } : {}),
 			...(description ? { description } : {}),
 			...(avatar ? { avatar } : {}),
+			...(room ? { room } : {}),
 			...(media ? { media } : {}),
 		};
 		const listing = (room) => ({
@@ -167,6 +211,8 @@ export class Script {
 				users: [...this.#users.values()],
 			},
 			...this.#records,
+			...(this.#activity.length ? [{ activity: this.#activity }] : []),
+			...(Object.keys(this.#live).length ? [{ live: this.#live }] : []),
 		];
 		return lines.map((line) => JSON.stringify(line)).join("\n") + "\n";
 	}

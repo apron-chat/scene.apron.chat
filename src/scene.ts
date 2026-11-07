@@ -52,6 +52,8 @@ export interface Room {
 
 export interface Scene {
 	title?: string;
+	/** The room or thread it opens on (scene extension: the header's `room`), when it lists it. */
+	room?: string;
 	/** Sent as a connection opens. */
 	server: string;
 	/** Sent after the reply to a guest `auth`: the whole scene. */
@@ -63,22 +65,43 @@ export interface Scene {
 	you: Json;
 	rooms: Map<string, Room>;
 	users: Map<string, Json>;
+	/** Live text (scene extension `live`), by id: each chunk with the milliseconds to wait before it. */
+	live: Map<string, LiveChunk[]>;
 }
+
+/** A chunk of live text: milliseconds to wait, then the text to write. */
+export type LiveChunk = [number, string];
 
 /** A scene as the Worker serves it: built by `compileScene` from its file, at build time (`scripts/build.mjs`). */
 export interface CompiledScene {
 	title?: string;
+	/** The room or thread a visit opens on: `/<name>` redirects with it. */
+	room?: string;
 	server: string;
 	auth: string;
 	pushed: string[];
 	/** The `result` of each `room_list`, by `roomListKey`. */
 	replies: Record<string, string>;
+	/** The `result` of a `status` request, when the scene has presence: an idle report changes nothing here. */
+	status?: string;
+	/** Live text, served at `/<name>/live/<id>`. */
+	live: Record<string, LiveChunk[]>;
 }
 
 /** Compiles a scene's JSON Lines into the strings it is served as. Throws `SceneError` for a file that isn't one. */
 export function compileScene(text: string): CompiledScene {
-	const { title, server, auth, pushed, replies } = parseScene(text);
-	return { ...(title !== undefined ? { title } : {}), server, auth, pushed, replies: Object.fromEntries(replies) };
+	const { title, room, server, auth, pushed, replies, users, live } = parseScene(text);
+	const presence = [...users.values()].some((user) => typeof user.status === "string");
+	return {
+		...(title !== undefined ? { title } : {}),
+		...(room !== undefined ? { room } : {}),
+		server,
+		auth,
+		pushed,
+		replies: Object.fromEntries(replies),
+		...(presence ? { status: "{}" } : {}),
+		live: Object.fromEntries(live),
+	};
 }
 
 /** Why a file isn't a scene this reads. */
@@ -119,6 +142,8 @@ export function parseScene(text: string): Scene {
 	const users = new Map<string, Json>();
 	const listed = new Map<string, { listing: Json; joined: boolean }>();
 	const records: { log: string; kind: "rooms" | "messages" | "reactions" | "memberships"; record: Json }[] = [];
+	const activity: Json[] = [];
+	const live = new Map<string, LiveChunk[]>();
 	for (const line of lines.slice(1)) {
 		if (!line) continue;
 		const each = (key: string, read: (value: Json) => void) => {
@@ -127,7 +152,15 @@ export function parseScene(text: string): Scene {
 		// A later listing of a room replaces an earlier one, and a later user object an earlier one (ARCHIVE.md §3).
 		each("joined", (room) => isId(room.room_id) && listed.set(room.room_id, { listing: room, joined: true }));
 		each("not_joined", (room) => isId(room.room_id) && listed.set(room.room_id, { listing: room, joined: false }));
-		each("users", (user) => isId(user.user_id) && users.set(user.user_id, withoutStatus(user)));
+		// A scene's users may keep `status` (and `seen`): presence, which an archive leaves out (ARCHIVE.md §2).
+		each("users", (user) => isId(user.user_id) && users.set(user.user_id, user));
+		// Scene extensions: typing to show (`activity` notifications' params), and live text by id.
+		each("activity", (params) => isId(params.room_id) && isObject(params.from) && activity.push(params));
+		if (isObject(line.live)) {
+			for (const [id, chunks] of Object.entries(line.live)) {
+				if (/^[\w-]{1,64}$/.test(id) && Array.isArray(chunks)) live.set(id, chunks.filter((chunk): chunk is LiveChunk => Array.isArray(chunk) && typeof chunk[0] === "number" && typeof chunk[1] === "string"));
+			}
+		}
 		for (const kind of ["rooms", "messages", "reactions", "memberships"] as const) {
 			each(kind, (record) => {
 				if (isLogId(record.log_id)) records.push({ log: record.log_id, kind, record });
@@ -174,6 +207,9 @@ export function parseScene(text: string): Scene {
 	const archive = { ...(typeof header.server === "string" ? { server: header.server } : {}), ...(typeof header.exported_at === "string" ? { exported_at: header.exported_at } : {}) };
 	// Bios show only with `ext:bio` (EXTENSIONS.md): advertised when a user has one.
 	const bios = [...users.values()].some((user) => isObject(user.ext) && typeof user.ext.bio === "string");
+	// Presence shows only with `status` (PROTOCOL.md §4.5), and typing only with `activity` (§4.6).
+	const presence = [...users.values()].some((user) => typeof user.status === "string");
+	const typing = activity.length > 0;
 	const look = Object.fromEntries((["title", "description", "avatar"] as const).filter((key) => typeof header[key] === "string").map((key) => [key, header[key] as string]));
 	const server = {
 		method: "server",
@@ -184,11 +220,11 @@ export function parseScene(text: string): Scene {
 			// No `ping`: a client then sends none (PROTOCOL.md §1). A scene is read and left, and an idle connection
 			// costs nothing, so nothing needs to know it is still there.
 			...look,
-			capabilities: [...CAPABILITIES, ...(media.length ? ["ext:media"] : []), ...(bios ? ["ext:bio"] : [])],
+			capabilities: [...CAPABILITIES, ...(presence ? ["status"] : []), ...(typing ? ["activity"] : []), ...(media.length ? ["ext:media"] : []), ...(bios ? ["ext:bio"] : [])],
 			ext: { settings: { read_cursors: false }, archive, ...(media.length ? { media: { origins: media } } : {}) },
 		},
 	};
-	const you = readOnly(isObject(header.you) && isId(header.you.user_id) ? withoutStatus(header.you) : VIEWER);
+	const you = readOnly(isObject(header.you) && isId(header.you.user_id) ? header.you : VIEWER);
 
 	// A sign-in's deliveries come after its `auth` result (PROTOCOL.md §3.2.2); a client that got them earlier
 	// would take them for another connection's. Every listed room's records go, those of rooms not joined too: a
@@ -196,6 +232,10 @@ export function parseScene(text: string): Scene {
 	const joined = [...rooms.values()].filter((room) => room.joined);
 	const pushed = [
 		JSON.stringify({ method: "room_update", params: { joined: joined.map((room) => room.listing), users: [...users.values()] } }),
+		// At a sign-in, each other user's shown status, unless offline or none (PROTOCOL.md §4.5.4).
+		...[...users.values()]
+			.filter((user) => user.user_id !== you.user_id && typeof user.status === "string" && user.status !== "offline" && user.status !== "")
+			.map((user) => JSON.stringify({ method: "user", params: { new: { user_id: user.user_id, status: user.status } } })),
 		...records
 			.filter(({ kind, record }) => kind !== "rooms" && rooms.has((kind === "reactions" ? roomOf(record) : record.room_id) as string))
 			.map(({ kind, record }) => {
@@ -203,6 +243,8 @@ export function parseScene(text: string): Scene {
 				if (kind === "reactions") return JSON.stringify({ method: "reactions", params: record });
 				return JSON.stringify({ method: "room_update", params: { memberships: [record] } });
 			}),
+		// Typing, last: it shows in rooms the client now knows, for as long as it says.
+		...activity.map((params) => JSON.stringify({ method: "activity", params })),
 	];
 
 	// Every `room_list` there is, by its key.
@@ -217,7 +259,8 @@ export function parseScene(text: string): Scene {
 		}
 	}
 
-	return { ...(look.title ? { title: look.title } : {}), server: JSON.stringify(server), pushed, auth: JSON.stringify({ you }), replies, you, rooms, users };
+	const opens = typeof header.room === "string" && rooms.has(header.room) ? { room: header.room } : {};
+	return { ...(look.title ? { title: look.title } : {}), ...opens, server: JSON.stringify(server), pushed, auth: JSON.stringify({ you }), replies, you, rooms, users, live };
 }
 
 /** `room_list` (PROTOCOL.md §4.2.1): the scene's rooms, as `you` joined them. */
@@ -242,12 +285,6 @@ function listRooms(rooms: Map<string, Room>, users: Map<string, Json>, params: J
 
 function withoutDelivery(room: Json): Json {
 	return Object.fromEntries(Object.entries(room).filter(([key]) => !DELIVERY.includes(key)));
-}
-
-/** A user object without `status` and `seen`, which are about a moment (ARCHIVE.md §2). */
-function withoutStatus(user: Json): Json {
-	const { status: _status, seen: _seen, ...rest } = user;
-	return rest;
 }
 
 /** `you` as this server signs one in: allowed only to read (`ext:permissions` `write: false`). */

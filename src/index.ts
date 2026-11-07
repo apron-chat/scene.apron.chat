@@ -1,5 +1,5 @@
 import { link, LINK_ORIGIN } from "./link";
-import { serve } from "./connection";
+import { serve, serveLive } from "./connection";
 import { getScene, SCENE_NAME, sceneNames } from "./scenes";
 
 /**
@@ -7,7 +7,8 @@ import { getScene, SCENE_NAME, sceneNames } from "./scenes";
  *
  * - `/<name>`, a WebSocket: the scene, served by this Worker (`serve`).
  * - `/<name>`, a page visit: a redirect to `link.apron.chat`, which opens the scene in a client.
- * - `/<name>.jsonl`: the scene's file, a static asset that never runs this Worker.
+ * - `/<name>.jsonl`: the scene's file, a static asset that never runs this Worker, as is its media in `/<name>/`.
+ * - `/<name>/live/<id>`: a scene's live text, written on its timeline (`serveLive`).
  * - `/`: the list of scenes.
  *
  * WebSockets are limited per address (`CONNECTIONS`), so a client that reconnects in a loop can't run up requests.
@@ -16,6 +17,13 @@ export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 		if (url.pathname === "/") return index(url);
+		// A scene's live text: /<name>/live/<id>.
+		const live = /^\/([a-z0-9][a-z0-9-]{0,63})\/live\/([\w-]{1,64})$/.exec(url.pathname);
+		if (live) {
+			const chunks = getScene(live[1]!)?.live[live[2]!];
+			if (!chunks || request.method !== "GET") return text(404, "No such live text");
+			return serveLive(chunks);
+		}
 		const name = url.pathname.replace(/^\/|\/$/g, "");
 		const scene = SCENE_NAME.test(name) ? getScene(name, url.origin) : undefined;
 		if (!scene) return text(404, "No such scene. The list is at /");
@@ -31,7 +39,7 @@ export default {
 			return serve(scene);
 		}
 		if (request.method !== "GET" && request.method !== "HEAD") return text(405, "Method not allowed");
-		return Response.redirect(link(url, name), 302);
+		return Response.redirect(link(url, name, scene.room), 302);
 	},
 } satisfies ExportedHandler<Env>;
 

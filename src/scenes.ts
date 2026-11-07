@@ -21,7 +21,7 @@ export function getScene(name: string, origin: string = CANONICAL_ORIGIN): Compi
 	if (!moved) {
 		const at = (text: string) => text.replaceAll(CANONICAL_ORIGIN, origin);
 		moved = {
-			...(scene.title !== undefined ? { title: scene.title } : {}),
+			...scene,
 			server: at(scene.server),
 			auth: at(scene.auth),
 			pushed: scene.pushed.map(at),
