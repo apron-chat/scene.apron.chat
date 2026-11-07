@@ -70,6 +70,8 @@ function avatarSource(avatar, version) {
 	if (typeof avatar !== "string") return undefined;
 	if (avatar.startsWith(`${CANONICAL}/`)) {
 		const path = avatar.slice(CANONICAL.length);
+		// A scene's own avatar URL may already carry its version.
+		if (path.includes("?")) return path;
 		const v = version?.(path);
 		return v ? `${path}?v=${v}` : path;
 	}
