@@ -145,7 +145,7 @@ illustrated from `homealone-avatars.webp`, photographed from
 `homealone-avatars-photos.webp`, and Kevin, Kate and Peter in watercolour
 from `homealone-avatars-family.webp`; the rest of the family keep initials.
 Its two photos, Frank's Eiffel Tower and Kevin's dinner, are from Unsplash
-(Unsplash License), and its voice message is, for now, a polka from Pixabay
+(Unsplash License), and the polka behind its voice message is from Pixabay
 (Pixabay Content License), credited in the script.
 
 ### Adding a scene
