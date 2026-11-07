@@ -4,7 +4,7 @@ committed; run this only to change them (it needs Pillow):
 
     python3 scripts/scenes/homealone-avatars.py
 
-Two sheets, for a mix that says who set their own picture:
+Three sheets, for a mix that says who set their own picture:
 
 - homealone-avatars.webp, a three-by-two grid of illustrated square tiles with
   rounded corners: for those who'd have promo art (Gus) or a logo (Marv's van).
@@ -16,10 +16,14 @@ Two sheets, for a mix that says who set their own picture:
   as the square around its circle, and the corners outside the circle, which
   are white in the sheet, are filled with the colour at the circle's edge, so
   that the picture fills a square avatar as well as a round one.
+- homealone-avatars-family.webp, watercolour portraits of Kevin, Kate and
+  Peter in circles on a transparent sheet: the parents and the kid who live in
+  the house. Each is cut like a photo, on the colour of watercolour paper. The rest of the family (and Uncle Frank, who won't pay for one) keep
+  their initials.
 """
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageStat
 
 HERE = Path(__file__).parent
 OUT = HERE.parent.parent / "scenes" / "homealone"
@@ -44,6 +48,15 @@ CIRCLES = [
     ("marley", 775, 867, 150),  # the shovel
 ]
 
+PAPER = (251, 248, 241)  # watercolour paper, behind the family's portraits
+
+# The same, in the family sheet.
+FAMILY = [
+    ("kevin", 331, 336, 318),
+    ("kate", 998, 336, 318),
+    ("peter", 1668, 336, 318),
+]
+
 
 def save(user_id, avatar, colours):
     small = avatar.resize((256, 256), Image.LANCZOS)
@@ -58,16 +71,31 @@ for user_id, row, column in TILES:
     # Flat colour takes a small palette well: about a third of the bytes, no visible change.
     save(user_id, grid.crop((left, top, left + side, top + side)), 128)
 
-photos = Image.open(HERE / "homealone-avatars-photos.webp").convert("RGB")
-for user_id, x, y, r in CIRCLES:
-    square = photos.crop((x - r, y - r, x + r, y + r))
+
+def circle(user_id, sheet, x, y, r):
+    square = sheet.crop((x - r, y - r, x + r, y + r))
     inside = Image.new("L", square.size, 0)
     ImageDraw.Draw(inside).ellipse((0, 0, 2 * r - 1, 2 * r - 1), fill=255)
-    # The colour at the circle's edge: a thin ring just inside it.
-    ring = Image.new("L", square.size, 0)
-    ImageDraw.Draw(ring).ellipse((0, 0, 2 * r - 1, 2 * r - 1), outline=255, width=6)
-    edge = tuple(round(c) for c in ImageStat.Stat(square, ring).mean)
+    if square.mode == "RGBA":
+        # A painted sheet: the paint, on paper. Its edge isn't one colour, so the corners are the paper's.
+        inside = ImageChops.multiply(inside, square.getchannel("A"))
+        square = square.convert("RGB")
+        edge = PAPER
+    else:
+        # The colour at the circle's edge: a thin ring just inside it.
+        ring = Image.new("L", square.size, 0)
+        ImageDraw.Draw(ring).ellipse((0, 0, 2 * r - 1, 2 * r - 1), outline=255, width=6)
+        edge = tuple(round(c) for c in ImageStat.Stat(square, ring).mean)
     avatar = Image.new("RGB", square.size, edge)
     avatar.paste(square, mask=inside)
-    # Photos need every colour of a palette, dithered.
+    # Photos and paint need every colour of a palette, dithered.
     save(user_id, avatar, 256)
+
+
+photos = Image.open(HERE / "homealone-avatars-photos.webp").convert("RGB")
+for user_id, x, y, r in CIRCLES:
+    circle(user_id, photos, x, y, r)
+
+family = Image.open(HERE / "homealone-avatars-family.webp").convert("RGBA")
+for user_id, x, y, r in FAMILY:
+    circle(user_id, family, x, y, r)

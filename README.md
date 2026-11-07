@@ -139,9 +139,10 @@ drawings of their own), and
 `homealone` (`scripts/scenes/homealone.mjs`) is a parody of *Home Alone*
 (1990), grown from a one-room screenshot into the week around it;
 `scripts/scenes/homealone-art.mjs` draws its pictures, and
-`scripts/scenes/homealone-avatars.py` cuts six of its cast's avatars, illustrated
-from `homealone-avatars.webp` and photographed from
-`homealone-avatars-photos.webp`; the family keeps its initials.
+`scripts/scenes/homealone-avatars.py` cuts nine of its cast's avatars:
+illustrated from `homealone-avatars.webp`, photographed from
+`homealone-avatars-photos.webp`, and Kevin, Kate and Peter in watercolour
+from `homealone-avatars-family.webp`; the rest of the family keep initials.
 
 ### Adding a scene
 

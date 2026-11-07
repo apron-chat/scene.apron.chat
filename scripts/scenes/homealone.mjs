@@ -51,8 +51,9 @@ const s = new Script({
 		agent: { name: "Ticket Counter", status: "online", roles: ["airline"], ext: { bio: "Booked through Christmas." } },
 	},
 	// Pictures for those who'd set one: the bot, the businesses, the Polka King, Buzz (Axl), Harry (his "badge"),
-	// and Marley (the shovel). The family is too busy for avatars, and Mitch Murphy is a nobody; they keep initials.
-	avatars: (user_id) => (["homealarm", "buzz", "gus", "harry", "marv", "nero", "marley"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
+	// Marley (the shovel), and the house's own: Kevin, Kate and Peter. The rest of the family is too busy, Uncle Frank
+	// won't pay for one, and Mitch Murphy is a nobody; they keep initials.
+	avatars: (user_id) => (["homealarm", "kevin", "kate", "peter", "buzz", "gus", "harry", "marv", "nero", "marley"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
 });
 
 // The rooms, a week before the trip, with no joined notices: they were always there.
