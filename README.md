@@ -130,7 +130,10 @@ them.
 (`screenshot/scenes/` there), copied unchanged into `scripts/scenes/fixtures/`
 and converted by `scripts/scenes/fixtures.mjs`. `piper` began as the fourth,
 and grew into its own script, `scripts/scenes/piper.mjs`, whose last
-afternoon is still that fixture's.
+afternoon is still that fixture's. It's a parody of HBO's *Silicon Valley*;
+its cast's avatars are cut by `scripts/scenes/piper-avatars.py` from
+`piper-avatars.webp`, a pixel-art drawing of them, and
+`scripts/scenes/piper-art.mjs` draws the rest of its pictures.
 
 ### Adding a scene
 

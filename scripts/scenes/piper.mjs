@@ -227,7 +227,7 @@ writeFileSync(
 	s.archive({
 		server: "wss://scene.apron.chat/piper",
 		title: "Pied Piper",
-		description: "Pied Piper's long weekend: an edit war over tabs, a 3 AM alarm, a bot that bought 4,000 lbs of beef, a board seat that walks out, and the benchmark.",
+		description: "A parody of HBO's Silicon Valley. Pied Piper's long weekend: an edit war over tabs, a 3 AM alarm, a bot that bought 4,000 lbs of beef, a board seat that walks out, and the benchmark.",
 		avatar: `${MEDIA}/scene.png`,
 		room: "eng",
 		media: ["https://scene.apron.chat"],

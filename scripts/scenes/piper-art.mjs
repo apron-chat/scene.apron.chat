@@ -1,8 +1,9 @@
-// Draws the piper scene's pictures into scenes/piper/: a face for each person,
-// one feature apiece so they read at avatar size, and the scene's own image,
-// a flute and its notes, and Jian-Yang's SeeFood demo. Each is an SVG rendered
-// to PNG, which every client can show; piper.mjs names them. The PNGs are
-// committed; run this only to change them:
+// Draws the piper scene's own pictures into scenes/piper/: son-of-anton's
+// avatar, the scene's image (a flute and its notes), and Jian-Yang's SeeFood
+// demo. Each is an SVG rendered to PNG, which every client can show;
+// piper.mjs names them. The cast's avatars are cut from a drawing of them by
+// piper-avatars.py instead. The PNGs are committed; run this only to change
+// them:
 //
 //   node scripts/scenes/piper-art.mjs
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -19,102 +20,6 @@ function png(name, background, body) {
 }
 
 const INK = "#1f1d1a";
-
-/**
- * Shoulders in `shirt`, then `back` (hair behind the head), a head in `skin` of radius `r`, eyes, a mouth, and
- * `front` (whatever sits on the face: hair, glasses, a beard).
- */
-function person({ shirt, skin, back = "", front = "", mouth = "M226 318 Q256 336 286 318", eyes = true, r = 118 }) {
-	return `
-	<path d="M76 512 Q90 392 256 384 Q422 392 436 512 Z" fill="${shirt}"/>
-	${back}
-	<circle cx="256" cy="246" r="${r}" fill="${skin}"/>
-	${eyes ? `<circle cx="214" cy="236" r="12" fill="${INK}"/><circle cx="298" cy="236" r="12" fill="${INK}"/>` : ""}
-	<path d="${mouth}" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/>
-	${front}`;
-}
-
-// Richard (user_id "ada", as every fixture's reader): a hoodie, unruly hair, and a nervous mouth.
-png(
-	"ada.png",
-	"#2a9d8f",
-	person({
-		shirt: "#6b7280",
-		skin: "#f1c7a5",
-		back: `<path d="M120 400 Q256 352 392 400 L392 430 Q256 380 120 430 Z" fill="#4b5563"/>`,
-		front: `<path d="M140 210 Q150 110 256 112 Q362 110 372 210 Q330 160 300 180 Q280 140 250 170 Q220 140 196 176 Q170 160 140 210 Z" fill="#6b4a2f"/>`,
-		mouth: "M222 322 Q238 312 254 322 Q270 332 290 320",
-	}),
-);
-
-// Gilfoyle: long dark hair, a full beard, and nothing on his face at all.
-png(
-	"gilfoyle.png",
-	"#26232b",
-	person({
-		shirt: "#0f0f12",
-		skin: "#efc9ab",
-		back: `<path d="M126 250 Q120 120 256 108 Q392 120 386 250 L392 420 L330 420 L330 250 L182 250 L182 420 L120 420 Z" fill="#2b2118"/>`,
-		front: `<path d="M140 210 Q160 116 256 116 Q352 116 372 210 Q300 150 256 152 Q212 150 140 210 Z" fill="#2b2118"/>
-		<path d="M160 268 Q170 380 256 388 Q342 380 352 268 Q320 300 256 300 Q192 300 160 268 Z" fill="#2b2118"/>`,
-		mouth: "M232 322 L280 322",
-	}),
-);
-
-// Dinesh: short dark hair, a moustache, and a gold chain.
-png(
-	"dinesh.png",
-	"#e9c46a",
-	person({
-		shirt: "#264653",
-		skin: "#a86f4c",
-		front: `<path d="M142 214 Q150 118 256 116 Q362 118 370 214 Q330 168 256 168 Q182 168 142 214 Z" fill="#1d1a17"/>
-		<path d="M220 300 Q256 284 292 300 Q256 312 220 300 Z" fill="#1d1a17"/>
-		<path d="M186 410 Q256 460 326 410" fill="none" stroke="#f4b400" stroke-width="12" stroke-dasharray="2 14" stroke-linecap="round"/>`,
-		mouth: "M228 330 Q256 340 284 326",
-	}),
-);
-
-// Jared: neat, thin hair, and the kindest smile.
-png(
-	"jared.png",
-	"#a8dadc",
-	person({
-		shirt: "#8ecae6",
-		skin: "#f3d3bd",
-		front: `<path d="M146 206 Q160 126 256 124 Q352 126 366 206 Q300 150 220 160 Q180 168 146 206 Z" fill="#c9b18b"/>
-		<path d="M150 400 L256 470 L362 400" fill="none" stroke="#ffffff" stroke-width="14"/>`,
-		mouth: "M212 312 Q256 360 300 312",
-	}),
-);
-
-// Erlich: a big beard, longish hair, and sunglasses indoors.
-png(
-	"erlich.png",
-	"#e76f51",
-	person({
-		shirt: "#3d405b",
-		skin: "#efc6a4",
-		back: `<path d="M128 240 Q124 118 256 112 Q388 118 384 240 L384 330 L128 330 Z" fill="#7a5230"/>`,
-		front: `<path d="M150 266 Q160 396 256 404 Q352 396 362 266 Q320 296 256 298 Q192 296 150 266 Z" fill="#7a5230"/>
-		<rect x="176" y="214" width="72" height="44" rx="16" fill="${INK}"/><rect x="264" y="214" width="72" height="44" rx="16" fill="${INK}"/>
-		<path d="M248 232 L264 232" stroke="${INK}" stroke-width="8"/>`,
-		mouth: "M230 326 Q256 338 282 326",
-	}),
-);
-
-// Big Head: a big head, small features.
-png(
-	"bighead.png",
-	"#90be6d",
-	person({
-		shirt: "#577590",
-		skin: "#f1c7a5",
-		r: 168,
-		front: `<path d="M120 190 Q160 76 256 74 Q352 76 392 190 Q330 130 256 132 Q182 130 120 190 Z" fill="#b5835a"/>`,
-		mouth: "M240 318 Q256 326 272 318",
-	}),
-);
 
 // son-of-anton: a bot whose tests all pass. It deleted them.
 png(
@@ -140,45 +45,6 @@ png(
 		<circle cx="356" cy="130" r="22"/><rect x="372" y="62" width="9" height="70"/><path d="M372 62 Q410 74 404 108 Q396 86 381 84 Z"/>
 		<circle cx="420" cy="220" r="17"/><rect x="433" y="166" width="7" height="56"/>
 	</g>`,
-);
-
-// Jian-Yang: a black bowl cut, and no expression at all.
-png(
-	"jianyang.png",
-	"#8ecae6",
-	person({
-		shirt: "#e76f51",
-		skin: "#e8c39e",
-		back: `<path d="M134 250 Q130 120 256 114 Q382 120 378 250 L366 250 Q360 180 256 178 Q152 180 146 250 Z" fill="#141414"/>`,
-		front: `<path d="M136 214 Q140 112 256 110 Q372 112 376 214 L376 206 Q256 196 136 206 Z" fill="#141414"/>`,
-		mouth: "M236 324 L276 324",
-	}),
-);
-
-// Russ Hanneman: frosted tips, and an open collar.
-png(
-	"russ.png",
-	"#ffb703",
-	person({
-		shirt: "#1d3557",
-		skin: "#e9b48f",
-		front: `<path d="M146 200 L160 112 L190 160 L210 92 L236 152 L256 84 L276 152 L302 92 L322 160 L352 112 L366 200 Q330 170 256 168 Q182 170 146 200 Z" fill="#f2d16b"/>
-		<path d="M206 392 L256 452 L306 392" fill="#e9b48f"/>`,
-		mouth: "M212 314 Q256 352 300 314 Z",
-	}),
-);
-
-// Monica: shoulder-length hair, and a level look.
-png(
-	"monica.png",
-	"#b8c0ff",
-	person({
-		shirt: "#2b2d42",
-		skin: "#f3d0b5",
-		back: `<path d="M128 260 Q124 112 256 108 Q388 112 384 260 L392 380 L320 380 L320 250 L192 250 L192 380 L120 380 Z" fill="#7b3f20"/>`,
-		front: `<path d="M140 220 Q150 116 256 116 Q362 116 372 220 Q330 150 256 150 Q190 150 140 220 Z" fill="#7b3f20"/>`,
-		mouth: "M230 322 Q256 330 282 322",
-	}),
 );
 
 // SeeFood: two phones, a verdict each.
