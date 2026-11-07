@@ -145,7 +145,8 @@ illustrated from `homealone-avatars.webp`, photographed from
 `homealone-avatars-photos.webp`, and Kevin, Kate and Peter in watercolour
 from `homealone-avatars-family.webp`; the rest of the family keep initials.
 Its two photos, Frank's Eiffel Tower and Kevin's dinner, are from Unsplash
-(Unsplash License), credited in the script.
+(Unsplash License), and its voice message is, for now, a polka from Pixabay
+(Pixabay Content License), credited in the script.
 
 ### Adding a scene
 
@@ -235,7 +236,9 @@ file in `scenes/`.
 
 An image embed is an `upload` embed with `og.image` (PROTOCOL.md §4.8.4);
 `image()` in `scripts/scenes/lib.mjs` makes one. Use PNG, JPEG, GIF or WebP,
-which every client can show; `npm test` checks PNG and JPEG (`.jpg`) files. `scripts/scenes/whosonfirst-art.mjs` draws
+which every client can show; `npm test` checks PNG and JPEG (`.jpg`) files.
+A voice message is an `upload` embed with `og.audio`, as apron-web records
+one; `audio()` makes it, from an MP3 next to the scene. `scripts/scenes/whosonfirst-art.mjs` draws
 `whosonfirst`'s as SVG and renders them to PNG.
 
 ### Readers

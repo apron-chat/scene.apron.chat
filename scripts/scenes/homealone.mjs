@@ -10,7 +10,7 @@
 //
 //   node scripts/scenes/homealone.mjs
 import { writeFileSync } from "node:fs";
-import { image, Script } from "./lib.mjs";
+import { audio, image, Script } from "./lib.mjs";
 
 const MEDIA = "https://scene.apron.chat/homealone";
 
@@ -386,7 +386,13 @@ const battle = s.say("battleplan", "kevin", "This is my house. I have to defend 
 s.react(battle, "homealarm", ["🫡"]);
 s.say("battleplan", "kevin", "@homealarm don't call the police until I say.", { mentions: ["homealarm"], after: 30 });
 s.say("battleplan", "homealarm", "Armed. Mode: Kevin. Police: on hold until you say.", { after: 2 });
-const love = s.say("dm-kevin", "kate", "Kevin, I'm in a van with a polka band. I'm coming home. I love you.", { after: 3000 });
+// A voice message from the van. For now its audio is only the band: 15 seconds of "Fun Polka Song for Dancing" by
+// Nick Panek (Pixabay Content License; Pixabay track 221380), until Kate's voice is recorded over it. Its alt is
+// what she'll say.
+const love = s.say("dm-kevin", "kate", "", {
+	after: 3000,
+	embeds: [audio(`${MEDIA}/voicenote.mp3`, { title: "voice-message.mp3", alt: "Kate, over a polka band in a van: Kevin, it's Mom. I'm in a van with a polka band. Don't ask. We're in Indiana. Don't open the door for anyone. I'm coming home, sweetheart. I love you." })],
+});
 
 s.at(ct("2025-12-24 20:30"));
 const heard = s.say("family", "kate", "Has anyone heard from Kevin today?", { after: 0 });
