@@ -138,7 +138,9 @@ drawings of their own), and
 `scripts/scenes/piper-art.mjs` draws the rest of its pictures.
 `homealone` (`scripts/scenes/homealone.mjs`) is a parody of *Home Alone*
 (1990), grown from a one-room screenshot into the week around it;
-`scripts/scenes/homealone-art.mjs` draws its pictures.
+`scripts/scenes/homealone-art.mjs` draws its pictures, and
+`scripts/scenes/homealone-avatars.py` cuts six of its cast's avatars from
+`homealone-avatars.webp`; the family keeps its initials.
 
 ### Adding a scene
 

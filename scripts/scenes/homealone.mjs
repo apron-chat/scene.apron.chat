@@ -50,7 +50,9 @@ const s = new Script({
 		balzak: { name: "Officer Balzak", status: "idle", roles: ["police"], ext: { bio: "Police. You want the Family Affairs desk." } },
 		agent: { name: "Ticket Counter", status: "online", roles: ["airline"], ext: { bio: "Booked through Christmas." } },
 	},
-	avatars: (user_id) => (user_id === "homealarm" ? `${MEDIA}/homealarm.png` : undefined),
+	// Pictures for those who'd set one: the bot, the businesses, the Polka King, Buzz (Axl), Harry (his "badge"),
+	// and Marley (the shovel). The family is too busy for avatars, and Mitch Murphy is a nobody; they keep initials.
+	avatars: (user_id) => (["homealarm", "buzz", "gus", "harry", "marv", "nero", "marley"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
 });
 
 // The rooms, a week before the trip, with no joined notices: they were always there.
