@@ -210,6 +210,11 @@ export function parseScene(text: string): Scene {
 	// Presence shows only with `status` (PROTOCOL.md §4.5), and typing only with `activity` (§4.6).
 	const presence = [...users.values()].some((user) => typeof user.status === "string");
 	const typing = activity.length > 0;
+	// Read cursors show only with `read_cursors` on, and readers ("seen by") in private rooms only with
+	// `read_receipts: "private"` (apron-web's EXT.md). Off, a client sends no cursors of its own, which would only
+	// spend a connection's frames; so they're on only in a scene that has someone's cursor to show.
+	const reads = activity.some((params) => typeof params.read_message_id === "string");
+	const settings = reads ? { read_cursors: true, read_receipts: "private" } : { read_cursors: false };
 	const look = Object.fromEntries((["title", "description", "avatar"] as const).filter((key) => typeof header[key] === "string").map((key) => [key, header[key] as string]));
 	const server = {
 		method: "server",
@@ -221,7 +226,7 @@ export function parseScene(text: string): Scene {
 			// costs nothing, so nothing needs to know it is still there.
 			...look,
 			capabilities: [...CAPABILITIES, ...(presence ? ["status"] : []), ...(typing ? ["activity"] : []), ...(media.length ? ["ext:media"] : []), ...(bios ? ["ext:bio"] : [])],
-			ext: { settings: { read_cursors: false }, archive, ...(media.length ? { media: { origins: media } } : {}) },
+			ext: { settings, archive, ...(media.length ? { media: { origins: media } } : {}) },
 		},
 	};
 	const you = readOnly(isObject(header.you) && isId(header.you.user_id) ? header.you : VIEWER);

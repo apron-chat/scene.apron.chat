@@ -131,6 +131,17 @@ export class Script {
 	}
 
 	/**
+	 * `user_id` has read `room_id` up to and including `message_id` (scene extension `activity`, sent as PROTOCOL.md
+	 * §4.6's `activity` notification with `read_message_id`), so a client can show who has seen what: by default, the
+	 * room's last message. A cursor of `you`'s is where the reader has read to, and what's after it is unread.
+	 */
+	read(room_id, user_id, message_id = this.#room(room_id).lastMessage) {
+		this.#room(room_id);
+		if (!this.#messages.has(message_id)) throw new Error(`no message ${message_id} to have read in ${room_id}`);
+		this.#activity.push({ room_id, from: this.#from(user_id), read_message_id: message_id });
+	}
+
+	/**
 	 * Live text (scene extension `live`): `chunks` of `[milliseconds to wait, text]`, served at `/<name>/live/<id>` as
 	 * a writer would have sent them. A `terminal` or `append` embed whose `url` is there shows them as they come, and
 	 * stays live.
@@ -164,6 +175,7 @@ export class Script {
 			...(reply ? { reply_to: { message_id: reply } } : {}),
 		};
 		room.latest = log_id;
+		room.lastMessage = log_id;
 		this.#messages.set(log_id, message);
 		this.#records.push({ messages: [message] });
 		return log_id;
