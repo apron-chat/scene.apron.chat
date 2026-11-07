@@ -30,7 +30,7 @@ CAST = [
 # Drawn on their own: user_id, the square to cut (left, top, size), and its background.
 SINGLES = [
     ("ada", (175, 30, 820), "#2a9d8f"),  # Richard, framed like the grid: head filling it, a hint of shoulders
-    ("gilfoyle", (340, 40, 700), "#8d99ae"),  # in his robes, with a raven; slate, so they don't vanish into it
+    ("gilfoyle", (0, 0, 1254), "#ffffff"),  # the whole drawing, staff and raven, on the white it was drawn on
 ]
 
 
