@@ -1,16 +1,19 @@
 // Compiles scenes/<name>/scene.jsonl into src/scenes.gen.ts: each scene as the strings
 // the Worker sends (src/scene.ts, compileScene), so it serves them without
 // parsing, fetching or reading storage. A scene that doesn't compile fails
-// the build. Run by `npm run build`, which wrangler runs before `dev` and
-// `deploy` (wrangler.jsonc).
+// the build. It also writes the landing page, scenes/index.html
+// (scripts/landing.mjs). Run by `npm run build`, which wrangler runs before
+// `dev` and `deploy` (wrangler.jsonc).
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compileScene } from "../src/scene.ts";
+import { landing } from "./landing.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const scenes = {};
+const files = [];
 // Each scene is a directory: its file, scene.jsonl, and its media.
 for (const name of readdirSync(join(root, "scenes")).sort()) {
 	const file = join(root, "scenes", name, "scene.jsonl");
@@ -18,7 +21,9 @@ for (const name of readdirSync(join(root, "scenes")).sort()) {
 	if (!existsSync(file)) throw new Error(`scenes/${name}/ has no scene.jsonl`);
 	if (!NAME.test(name)) throw new Error(`scenes/${name}/: a scene's name is lowercase letters, digits and dashes`);
 	try {
-		scenes[name] = compileScene(readFileSync(file, "utf8"));
+		const text = readFileSync(file, "utf8");
+		scenes[name] = compileScene(text);
+		files.push([name, text]);
 	} catch (error) {
 		throw new Error(`scenes/${name}/scene.jsonl: ${error.message}`);
 	}
@@ -30,6 +35,8 @@ const text = [
 	`export const SCENES: Record<string, CompiledScene> = ${JSON.stringify(scenes)};`,
 	"",
 ].join("\n");
-// Written only when it changes: wrangler dev rebuilds on every change it sees, this file's included.
-if (!existsSync(out) || readFileSync(out, "utf8") !== text) writeFileSync(out, text);
+// Each written only when it changes: wrangler dev rebuilds on every change it sees, these files' included.
+const write = (path, content) => (existsSync(path) && readFileSync(path, "utf8") === content) || writeFileSync(path, content);
+write(out, text);
+write(join(root, "scenes", "index.html"), landing(files));
 console.log(`Compiled ${Object.keys(scenes).length} scene(s): ${Object.keys(scenes).join(", ")} (${Math.round(text.length / 1024)} KiB)`);
