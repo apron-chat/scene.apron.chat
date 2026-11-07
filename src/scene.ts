@@ -15,9 +15,10 @@
  * request's `id`, and `room_list`, which a client with `rooms` sends after it,
  * in a few shapes, all listed in `replies`. Only the `id` is written in.
  *
- * Scenes are files in this repository, checked by `npm test`, not uploads: the
- * reader trusts their shape, and clients decode every record as untrusted
- * anyway (PROTOCOL.md §5.4).
+ * This runs at build time (`compileScene`), so the Worker serves strings and
+ * parses nothing. Scenes are files in this repository, checked by the build
+ * and by `npm test`, not uploads: this trusts their shape, and clients decode
+ * every record as untrusted anyway (PROTOCOL.md §5.4).
  */
 
 export type Json = Record<string, unknown>;
@@ -59,6 +60,22 @@ export interface Scene {
 	you: Json;
 	rooms: Map<string, Room>;
 	users: Map<string, Json>;
+}
+
+/** A scene as the Worker serves it: built by `compileScene` from its file, at build time (`scripts/build.mjs`). */
+export interface CompiledScene {
+	title?: string;
+	server: string;
+	auth: string;
+	pushed: string[];
+	/** The `result` of each `room_list`, by `roomListKey`. */
+	replies: Record<string, string>;
+}
+
+/** Compiles a scene's JSON Lines into the strings it is served as. Throws `SceneError` for a file that isn't one. */
+export function compileScene(text: string): CompiledScene {
+	const { title, server, auth, pushed, replies } = parseScene(text);
+	return { ...(title !== undefined ? { title } : {}), server, auth, pushed, replies: Object.fromEntries(replies) };
 }
 
 /** Why a file isn't a scene this reads. */

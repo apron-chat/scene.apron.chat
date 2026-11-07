@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { parseScene, roomListKey, SceneError } from "../src/scene";
+import { compileScene, parseScene, roomListKey, SceneError } from "../src/scene";
 import { SCENES } from "../src/scenes.gen";
 import { SCENE_NAME } from "../src/scenes";
 
+const FILES = Object.fromEntries(
+	Object.entries(import.meta.glob<string>("../scenes/*.jsonl", { query: "?raw", import: "default", eager: true })).map(([path, text]) => [path.slice("../scenes/".length, -".jsonl".length), text]),
+);
+
+it("bundles every scene, compiled from its file as it is now", () => {
+	expect(Object.keys(SCENES).sort()).toEqual(Object.keys(FILES).sort());
+	for (const [name, text] of Object.entries(FILES)) expect(SCENES[name], `run npm run build for ${name}`).toEqual(compileScene(text));
+});
+
 /** Every scene in scenes/ is one a client can read whole: what it refers to is in it. */
-describe.each(Object.entries(SCENES))("scenes/%s.jsonl", (name, text) => {
+describe.each(Object.entries(FILES))("scenes/%s.jsonl", (name, text) => {
 	const lines = text.trim().split("\n").map((line) => JSON.parse(line));
 	const header = lines[0];
 	const scene = parseScene(text);

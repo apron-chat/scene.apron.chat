@@ -1,6 +1,8 @@
 import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { MAX_FRAMES, PING, PONG } from "../src/server";
+import { MAX_FRAMES, PONG } from "../src/connection";
+
+const PING = '{"method":"ping"}';
 
 type Frame = { id?: string; method?: string; params?: any; result?: any; error?: any };
 

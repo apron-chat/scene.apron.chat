@@ -1,25 +1,24 @@
 import { link, LINK_ORIGIN } from "./link";
-import { hasScene, loadScene, SCENE_NAME, sceneNames } from "./scenes";
-
-export { SceneServer } from "./server";
+import { serve } from "./connection";
+import { getScene, SCENE_NAME, sceneNames } from "./scenes";
 
 /**
  * scene.apron.chat:
  *
- * - `/<name>`, a WebSocket: the scene, served by its Durable Object (`SceneServer`).
+ * - `/<name>`, a WebSocket: the scene, served by this Worker (`serve`).
  * - `/<name>`, a page visit: a redirect to `link.apron.chat`, which opens the scene in a client.
  * - `/<name>.jsonl`: the scene's file, a static asset that never runs this Worker.
  * - `/`: the list of scenes.
  *
- * Unknown names are refused here, before any Durable Object is reached. WebSockets are limited per address
- * (`CONNECTIONS`), so a client that reconnects in a loop can't run up requests.
+ * WebSockets are limited per address (`CONNECTIONS`), so a client that reconnects in a loop can't run up requests.
  */
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 		if (url.pathname === "/") return index(url);
 		const name = url.pathname.replace(/^\/|\/$/g, "");
-		if (!SCENE_NAME.test(name) || !hasScene(name)) return text(404, "No such scene. The list is at /");
+		const scene = SCENE_NAME.test(name) ? getScene(name) : undefined;
+		if (!scene) return text(404, "No such scene. The list is at /");
 
 		const upgrade = request.headers.get("Upgrade")?.toLowerCase() === "websocket";
 		const status = url.searchParams.get("apron_connection_status") === "1";
@@ -29,7 +28,7 @@ export default {
 			// After a refused handshake a client asks why over HTTP (apron-web EXT.md §5): told to wait, it does.
 			if (!success) return refused(request, "Too many connections from your address; try again in a minute", 60);
 			if (!upgrade) return text(404, "Connections are open");
-			return env.SCENE.get(env.SCENE.idFromName(name)).fetch(request);
+			return serve(scene);
 		}
 		if (request.method !== "GET" && request.method !== "HEAD") return text(405, "Method not allowed");
 		return Response.redirect(link(url, name), 302);
@@ -39,7 +38,7 @@ export default {
 function index(url: URL): Response {
 	const rows = sceneNames()
 		.map((name) => {
-			const title = loadScene(name)!.title ?? name;
+			const title = getScene(name)!.title ?? name;
 			return `<li><a href="/${name}">${escape(title)}</a> <code>${escape(`wss://${url.host}/${name}`)}</code> <a href="/${name}.jsonl">jsonl</a></li>`;
 		})
 		.join("\n");

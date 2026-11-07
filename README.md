@@ -22,8 +22,8 @@ Who, What and I Don't Know.
 
 ## What a client sees
 
-A scene is a replay: the server compiles the archive once per isolate into
-fixed frames, sends them, and asks the client for nothing. A client can't be
+A scene is a replay: the build compiles the archive into fixed frames, and
+the server sends them and asks the client for nothing. A client can't be
 stopped from asking for some things, so those few answers are worked out up
 front too; serving a request only writes its `id` into a precomputed string.
 
@@ -55,41 +55,51 @@ apron-web, given the stream before it signed in, took it for an earlier
 connection's and marked a gap ("Reconnected · earlier messages aren't
 available"). Every client sends `auth`, so it costs nothing.
 
-Then the connection goes idle. Pings are answered by the runtime, without
-running any code.
+Then the connection goes idle, answering only pings.
 
 ## Cost
 
-Each scene is one Durable Object (`idFromName(name)`), using the WebSocket
-Hibernation API. What a viewer costs:
+The server is one Worker, with no Durable Object: a connection shares nothing
+with any other, so nothing needs to be in one place. Each scene is compiled
+at build time (`scripts/build.mjs`) into the strings that are sent, so the
+Worker parses nothing, and reads no storage. What a viewer costs, by
+[Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/):
 
-- **Connecting:** one Worker request and one Durable Object request. Unknown
-  scene names are refused by the Worker, before any object is reached.
-- **Reading:** `auth` and a few `room_list`s (six from apron-web), which
-  Cloudflare bills at 20 frames per request. Each is a lookup and a string
-  write. The object compiles the scene once per isolate, from the Worker
-  bundle: no storage, no fetch.
-- **Staying open:** nothing. `{"method":"ping"}` is answered with
-  `{"method":"pong"}` by `setWebSocketAutoResponse`, which never wakes the
-  object. The object keeps no alarms, timers or storage, so it hibernates
-  between frames and is billed no duration while it does.
+- **Connecting:** one Worker request. WebSocket messages through a Worker are
+  not requests, and a Worker is billed no duration, so the rest is CPU time.
+- **Reading:** about 130 `send`s of precomputed strings (for `whosonfirst`), and the replies to
+  `auth` and a few `room_list`s (six from apron-web), each a lookup and a
+  string write. No `history`.
+- **Staying open:** a `{"method":"pong"}` every `ping` (45 seconds), a few
+  microseconds of CPU each, and nothing for the time between.
 - **The file and the redirect:** `/<name>.jsonl` is a static asset, which
   doesn't run the Worker. The redirect and the index are one Worker request
   each.
 
+The same server in a Durable Object, with hibernation and the runtime
+answering pings, costs more: a Durable Object request on top of the Worker's,
+each incoming frame billed at 20 per request, and the object's wall-clock time
+while it handles them.
+
+Cloudflare restarts Workers when it updates its runtime or a new version is
+deployed, which closes their WebSockets after a grace period. A client then
+reconnects, and is sent the scene again.
+
 Limits, against a client that misbehaves:
 
 - 30 WebSockets per minute from one address (the `CONNECTIONS` rate limit),
-  checked in the Worker. Past it, the handshake is refused, and a client that
-  asks why (`?apron_connection_status=1`, apron-web EXT.md §5) is told to wait
-  a minute.
-- Frames over 4 KiB close the connection. After 100 frames (pings not
-  counted), the connection gets `retry_after` and is closed.
+  checked before a scene is served. Past it, the handshake is refused, and a
+  client that asks why (`?apron_connection_status=1`, apron-web EXT.md §5) is
+  told to wait a minute.
+- Frames over 4 KiB close the connection. A connection may send 100 frames at
+  once, pings included, and one more every 10 seconds after; past that, it
+  gets `retry_after` and is closed. That bounds the CPU time any one
+  connection can use.
 
 ## Scenes
 
 Each `scenes/<name>.jsonl` is a scene. Its name is lowercase letters, digits
-and dashes. `npm run build` bundles them into the Worker, and `npm test`
+and dashes. `npm run build` compiles them into the Worker, and `npm test`
 checks that each one is complete: every record is in a listed room, and every
 author, mention, member, reply and parent room it refers to is in it.
 
@@ -117,7 +127,7 @@ watch.
 
 ## Develop
 
-Requires Node 22 or later.
+Requires Node 22.6 or later (the build imports TypeScript directly).
 
 ```sh
 npm install
@@ -140,6 +150,6 @@ it itself for `wrangler dev` and `wrangler deploy`.
 Every connection to a scene reads the same records, and nothing it sends is
 kept. An instanced scene could instead let each connection play its own copy
 of a room: the writes it sends are answered on that connection only, kept in
-its `serializeAttachment` (up to 2 KiB, which survives hibernation), and
-forgotten when it closes. That keeps the cost model above: no storage, and
-nothing shared between connections.
+the connection's own memory in the Worker, and forgotten when it closes. That
+keeps the cost model above: no storage, and nothing shared between
+connections.

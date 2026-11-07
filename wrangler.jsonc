@@ -1,5 +1,5 @@
 // scene.apron.chat: Apron archives (scenes/*.jsonl) served read-only over the
-// protocol, one Durable Object per scene. See README.md.
+// protocol by one Worker, compiled into it at build time. See README.md.
 //
 // Workers Builds ignores `build`: its Build command must also be
 // `npm run build`.
@@ -9,30 +9,23 @@
 	"compatibility_date": "2026-08-15",
 	"workers_dev": false,
 	"preview_urls": true,
-	// Pull request builds run `wrangler preview`. A Preview gets none of the
-	// bindings below unless they are declared here too: each Preview has its
-	// own SceneServer namespace, and its own rate limit namespace.
-	"previews": {
-		"durable_objects": {
-			"bindings": [{ "name": "SCENE", "class_name": "SceneServer" }]
-		},
-		"ratelimits": [
-			{ "name": "CONNECTIONS", "namespace_id": "74002", "simple": { "limit": 30, "period": 60 } }
-		]
-	},
 	"routes": [{ "pattern": "scene.apron.chat", "custom_domain": true }],
 	"build": { "command": "npm run build" },
 	// /<name>.jsonl is the scene's file, served without running the Worker.
 	// Every other path runs it: no other file is in scenes/.
 	"assets": { "directory": "./scenes" },
-	"durable_objects": {
-		"bindings": [{ "name": "SCENE", "class_name": "SceneServer" }]
-	},
-	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["SceneServer"] }],
-	// WebSockets per client address, checked before a Durable Object is
-	// reached. The namespace_id is unique within the account.
+	// WebSockets per client address, checked before a scene is served. The
+	// namespace_id is unique within the account.
 	"ratelimits": [
 		{ "name": "CONNECTIONS", "namespace_id": "74001", "simple": { "limit": 30, "period": 60 } }
 	],
+	// Pull request builds run `wrangler preview`. A Preview gets none of the
+	// bindings above unless they are declared here too; its rate limit uses
+	// its own namespace.
+	"previews": {
+		"ratelimits": [
+			{ "name": "CONNECTIONS", "namespace_id": "74002", "simple": { "limit": 30, "period": 60 } }
+		]
+	},
 	"observability": { "enabled": true, "head_sampling_rate": 0.1 }
 }
