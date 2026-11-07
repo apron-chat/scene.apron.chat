@@ -122,6 +122,7 @@ describe("the landing page", () => {
 		expect(page).toContain('<h3><a href="/whosonfirst">Who&#39;s on First?</a></h3>');
 		// A scene's own avatar, from wherever the page is served; else its initials.
 		expect(page).toContain('<img class="avatar" src="/whosonfirst/scene.png"');
+		expect(page).toContain('<img class="avatar" src="/piper/scene.png"');
 		expect(page).toContain('<span class="avatar mono" aria-hidden="true">TC</span>');
 	});
 
@@ -132,5 +133,33 @@ describe("the landing page", () => {
 		expect(summarize(FILES.rich!).features).toEqual(expect.arrayContaining(["images", "link previews", "typing", "mentions"]));
 		expect(summarize(FILES.whosonfirst!).features).toEqual(expect.arrayContaining(["edits", "deletions", "joins & leaves", "avatars", "bios"]));
 		expect(summarize(FILES.whosonfirst!).features).not.toContain("presence");
+	});
+});
+
+describe("the landing page's cards", () => {
+	const header = (text: string, change: (header: Record<string, unknown>) => void) => {
+		const [first, ...rest] = text.split("\n");
+		const parsed = JSON.parse(first!);
+		change(parsed);
+		return [JSON.stringify(parsed), ...rest].join("\n");
+	};
+
+	it("follow the scene's header: its avatar, versioned by its contents, and its title", () => {
+		const text = header(FILES.piper!, (h) => {
+			h.avatar = "https://scene.apron.chat/piper/new.png";
+			h.title = "Pied Piper, Inc.";
+		});
+		const page = landing([["piper", text]], { version: (path) => (path === "/piper/new.png" ? "abc123" : undefined) });
+		expect(page).toContain('<img class="avatar" src="/piper/new.png?v=abc123"');
+		expect(page).toContain('<h3><a href="/piper">Pied Piper, Inc.</a></h3>');
+	});
+
+	it("take an avatar from elsewhere as it is, and draw initials without one", () => {
+		const elsewhere = landing([["piper", header(FILES.piper!, (h) => (h.avatar = "https://images.example/pp.png"))]]);
+		expect(elsewhere).toContain('<img class="avatar" src="https://images.example/pp.png"');
+		const none = landing([["piper", header(FILES.piper!, (h) => delete h.avatar)]]);
+		expect(none).toContain('<span class="avatar mono" aria-hidden="true">PP</span>');
+		const bad = landing([["piper", header(FILES.piper!, (h) => (h.avatar = "javascript:alert(1)"))]]);
+		expect(bad).not.toContain("javascript:");
 	});
 });

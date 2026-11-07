@@ -4,6 +4,7 @@
 // the build. It also writes the landing page, scenes/index.html
 // (scripts/landing.mjs). Run by `npm run build`, which wrangler runs before
 // `dev` and `deploy` (wrangler.jsonc).
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,5 +39,10 @@ const text = [
 // Each written only when it changes: wrangler dev rebuilds on every change it sees, these files' included.
 const write = (path, content) => (existsSync(path) && readFileSync(path, "utf8") === content) || writeFileSync(path, content);
 write(out, text);
-write(join(root, "scenes", "index.html"), landing(files));
+// The landing page, from the scenes as they are now: a served file's version is a hash of its contents.
+const version = (path) => {
+	const file = join(root, "scenes", path);
+	return existsSync(file) ? createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 10) : undefined;
+};
+write(join(root, "scenes", "index.html"), landing(files, { version }));
 console.log(`Compiled ${Object.keys(scenes).length} scene(s): ${Object.keys(scenes).join(", ")} (${Math.round(text.length / 1024)} KiB)`);
