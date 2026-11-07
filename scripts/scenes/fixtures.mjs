@@ -2,7 +2,9 @@
 // fixtures (screenshot/scenes/*.js there, copied unchanged into fixtures/):
 // the same users, rooms, messages, reactions, typing, files and live terminal
 // output, as static scenes. The fixture server timed them in minutes before it
-// started; here they end at END, a fixed time.
+// started; here they end at END, a fixed time. Pictures in a scene's directory
+// add what the fixtures don't have: <user_id>.png is that user's avatar, and
+// scene.png the scene's (piper-art.mjs draws piper's).
 //
 //   node scripts/scenes/fixtures.mjs [name ...]
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -25,7 +27,9 @@ for (const name of process.argv.slice(2).length ? process.argv.slice(2) : Object
 	const fixture = (await import(`./fixtures/${name}.js`)).default;
 	const media = `${ORIGIN}/${name}`;
 	const minutesAgo = (minutes) => END - minutes * 60_000;
-	const s = new Script({ start: new Date(minutesAgo(240) - 1).toISOString(), you: YOU, users: fixture.users });
+	// Pictures the scene's directory has by name: <user_id>.png, a user's avatar, and scene.png, the scene's own.
+	const picture = (file) => (existsSync(fileURLToPath(new URL(`../../scenes/${name}/${file}`, import.meta.url))) ? `${media}/${file}` : undefined);
+	const s = new Script({ start: new Date(minutesAgo(240) - 1).toISOString(), you: YOU, users: fixture.users, avatars: (user_id) => picture(`${user_id}.png`) });
 	/** Each record a millisecond past the last at least, as the fixture server's log_ids were. */
 	const at = (time) => {
 		if (time - 1 > s.now) s.at(time - 1);
@@ -75,6 +79,8 @@ for (const name of process.argv.slice(2).length ? process.argv.slice(2) : Object
 	const { room, thread } = fixture.open ?? {};
 	mkdirSync(fileURLToPath(new URL(`../../scenes/${name}/`, import.meta.url)), { recursive: true });
 	const out = new URL(`../../scenes/${name}/scene.jsonl`, import.meta.url);
-	writeFileSync(out, s.archive({ server: `wss://scene.apron.chat/${name}`, ...SCENES[name], ...(thread ?? room ? { room: thread ?? room } : {}), ...(files.length ? { media: [ORIGIN] } : {}) }));
+	const avatar = picture("scene.png");
+	const pictures = files.length > 0 || avatar !== undefined || Object.keys(fixture.users).some((user_id) => picture(`${user_id}.png`));
+	writeFileSync(out, s.archive({ server: `wss://scene.apron.chat/${name}`, ...SCENES[name], ...(avatar ? { avatar } : {}), ...(thread ?? room ? { room: thread ?? room } : {}), ...(pictures ? { media: [ORIGIN] } : {}) }));
 	console.log(`Wrote ${fileURLToPath(out)}`);
 }
