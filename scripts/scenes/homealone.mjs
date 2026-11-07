@@ -85,6 +85,21 @@ s.say("plumbing", "harry", "Got the van lettered. **Oh-Kay Plumbing & Heating.**
 s.say("plumbing", "marv", "The O and the K are hyphenated, Harry. It looks like Oh, K.", { after: 60 });
 s.say("plumbing", "harry", "That's the joke, Marv.", { after: 30 });
 
+// Thursday the 18th: the list.
+s.at(ct("2025-12-18 19:30"));
+const PACKING = (done) => `Packing list. Check yourself off when your suitcase is **by the front door**.\n\n${[
+	["Buzz", "(Axl stays home)"],
+	["Megan", ""],
+	["Linnie", "(passport, phrasebook)"],
+	["Jeff", ""],
+	["Fuller", "(no Pepsi in the suitcase)"],
+	["Heather", ""],
+	["Kevin", ""],
+].map(([kid, note]) => `- ${done.includes(kid) ? "✅" : "⬜"} ${kid} ${note}`.trimEnd()).join("\n")}`;
+const packing = s.say("family", "kate", PACKING([]), { after: 0 });
+s.react(packing, "peter", ["🙏"]);
+s.say("family", "linnie", "*J'ai fini.*", { reply: packing, after: 600 });
+
 // Friday the 19th: Buzz tells the little kids about the neighbor.
 s.at(ct("2025-12-19 15:30"));
 s.room("marley", { parent_room_id: "watch", title: "Old Man Marley", description: "Buzz says. Nobody can prove it.", by: "buzz", after: 0 }, ["kevin", "kate"]);
@@ -141,6 +156,9 @@ const jerk = s.say("pizza", "frank", "Look what you did, you little jerk.", { af
 s.react(jerk, "kate", ["😐"]);
 s.say("pizza", "kevin", "Everyone in this family hates me!", { after: 20 });
 s.say("pizza", "kate", "Kevin. Upstairs. Third floor. Now.", { after: 15 });
+
+s.at(ct("2025-12-19 20:10"));
+s.edit(packing, PACKING(["Buzz", "Megan", "Linnie", "Jeff", "Fuller", "Heather"]), { after: 0 });
 
 s.at(ct("2025-12-19 20:40"));
 s.say("family", "kevin", "I'm the only one in this family who gets treated like scum.", { after: 0 });
@@ -200,7 +218,11 @@ s.say("headcount", "buzz", "In fairness, Kevin wasn't in the chat. You can't cou
 
 s.at(ct("2025-12-20 11:00"));
 s.say("dm-kevin", "kate", "Kevin, it's Mom. Are you okay? We're on the plane. Answer me.", { after: 0 });
-const junk = s.say("family", "kevin", "I'm eating junk and watching rubbish!", { after: 300 });
+const junk = s.say("family", "kevin", "I'm eating junk and watching rubbish!", {
+	after: 300,
+	// Photo by Toa Heftiba on Unsplash (Unsplash License): https://unsplash.com/photos/qmgqtK4xIQs
+	embeds: [image(`${MEDIA}/dinner.jpg`, { title: "dinner.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "A milkshake with an upside-down ice cream cone and marshmallows on top, and a striped bag of caramel popcorn" })],
+});
 s.say("family", "kevin", "You'd better come out and stop me!", { after: 20 });
 s.react(junk, "buzz", ["🍿"]);
 s.say("dm-kevin", "kate", "Kevin. Mom. Please look at your messages.", { after: 900 });
@@ -223,6 +245,13 @@ s.at(ct("2025-12-20 15:30"));
 s.say("dm-peter", "kate", "I'm going home. Next flight, whatever it is.", { after: 0 });
 s.say("dm-peter", "peter", "Everything's booked through Christmas. I asked.", { after: 60 });
 s.say("dm-peter", "kate", "Then I'll ask again.", { after: 20 });
+const view = s.say("family", "frank", "Paris! The view from Rob's window. Free.", {
+	after: 120,
+	// Photo by Anna Hunko on Unsplash (Unsplash License): https://unsplash.com/photos/kgz0aexIG9I
+	embeds: [image(`${MEDIA}/paris.jpg`, { title: "IMG_0412.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "The Eiffel Tower at dusk, its lights coming on, over the Seine" })],
+});
+s.react(view, "linnie", ["😍"]);
+s.react(view, "peter", ["😬"]);
 const wonderful = s.say("family", "frank", "Rob's TV gets one channel and it's *It's a Wonderful Life* dubbed in French.", { after: 300 });
 s.react(wonderful, "linnie", ["🇫🇷"]);
 s.react(wonderful, "megan", ["😭"]);
@@ -284,7 +313,7 @@ s.say("dm-peter", "kate", "Peter, a burglar just posted in Neighborhood Watch an
 s.say("dm-peter", "peter", "Officer Harry handled it. Nice guy.", { after: 300 });
 
 s.at(ct("2025-12-22 18:30"));
-s.say("security", "homealarm", "Living room: occupancy **9**. Music: on. One guest (tall, 6'6\") walking past the window every 30 seconds.", { after: 0 });
+const party = s.say("security", "homealarm", "Living room: occupancy **9**. Music: on. One guest (tall, 6'6\") walking past the window every 30 seconds.", { after: 0 });
 s.say("plumbing", "marv", "They're home, Harry. They're having a party.", { after: 120 });
 s.say("plumbing", "harry", "The tall guy walks past the window every thirty seconds.", { after: 60 });
 s.say("plumbing", "marv", "Popular guy.", { after: 10 });
@@ -357,7 +386,7 @@ const battle = s.say("battleplan", "kevin", "This is my house. I have to defend 
 s.react(battle, "homealarm", ["🫡"]);
 s.say("battleplan", "kevin", "@homealarm don't call the police until I say.", { mentions: ["homealarm"], after: 30 });
 s.say("battleplan", "homealarm", "Armed. Mode: Kevin. Police: on hold until you say.", { after: 2 });
-s.say("dm-kevin", "kate", "Kevin, I'm in a van with a polka band. I'm coming home. I love you.", { after: 3000 });
+const love = s.say("dm-kevin", "kate", "Kevin, I'm in a van with a polka band. I'm coming home. I love you.", { after: 3000 });
 
 s.at(ct("2025-12-24 20:30"));
 const heard = s.say("family", "kate", "Has anyone heard from Kevin today?", { after: 0 });
@@ -399,6 +428,13 @@ s.live("christmas-eve", [
 s.at(ct("2025-12-24 21:08"));
 s.say("dm-gus", "kate", "Gus. Drive faster.", { after: 0 });
 s.say("dm-gus", "gus", "Ma'am, it's a polka van.", { after: 20 });
+// Kevin has read every one of Mom's messages. He has answered none.
+s.read("dm-kevin", "kevin", love);
+// Kate has read everything, in the van, but what came today from the house: Kevin's battle plan, and the alarm in
+// Home Security and the family room. They're unread.
+for (const room of ["watch", "marley", "choir", "pizza", "headcount", "dm-peter", "dm-kevin", "dm-police", "dm-airline", "dm-gus"]) s.read(room, "kate");
+s.read("security", "kate", party);
+s.read("family", "kate", champagne);
 s.typing("family", "kevin");
 s.typing("dm-gus", "gus");
 

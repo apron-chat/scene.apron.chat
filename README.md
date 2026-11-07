@@ -29,7 +29,8 @@ front too; serving a request only writes its `id` into a precomputed string.
 
 1. On connect: a `server` frame with `auth: ["guest"]`, the scene's `title`,
    `description` and `avatar`, and the capabilities `rooms`, `reactions`,
-   `ext:settings` (`read_cursors: false`), `ext:permissions`, `ext:archive`,
+   `ext:settings` (`read_cursors: false`, or, in a scene with someone's read
+   cursor, `read_cursors: true` and `read_receipts: "private"`), `ext:permissions`, `ext:archive`,
    `status` when users have presence, `activity` when the scene has typing,
    `ext:media` when the header names `media` origins, and `ext:bio` when a
    user has a bio. **No `ping`**: a client then sends none. **Not `history`**: a client with it
@@ -143,6 +144,8 @@ drawings of their own), and
 illustrated from `homealone-avatars.webp`, photographed from
 `homealone-avatars-photos.webp`, and Kevin, Kate and Peter in watercolour
 from `homealone-avatars-family.webp`; the rest of the family keep initials.
+Its two photos, Frank's Eiffel Tower and Kevin's dinner, are from Unsplash
+(Unsplash License), credited in the script.
 
 ### Adding a scene
 
@@ -198,7 +201,7 @@ them.
 | header | `title`, `description`, `avatar` | the `server` frame's (PROTOCOL.md §3.1) |
 | header | `room` | the room or thread that `/<name>` opens on |
 | `users` | `status` (and `seen`) | presence: the server advertises `status`, and sends each user's status at sign-in (§4.5.4). An archive leaves these out |
-| part | `activity` | `activity` notifications' params, such as typing, sent after everything else; the server advertises `activity`. Keep typing short (the scripts use 5 seconds): long enough to show in a screenshot, gone soon after a visitor arrives |
+| part | `activity` | `activity` notifications' params, such as typing, sent after everything else; the server advertises `activity`. Keep typing short (the scripts use 5 seconds): long enough to show in a screenshot, gone soon after a visitor arrives. A `read_message_id` is a read cursor (`read()` in `lib.mjs`): someone else's shows who has seen a message in a private room, and `you`'s marks what the reader has read, so only what's after it shows as unread |
 | part | `live` | live text by id, `{"<id>": [[ms, "text"], ...]}`, served at `/<name>/live/<id>`: each chunk after its wait, then held open for 30 minutes, so a `terminal` or `append` embed whose `url` is there shows it live |
 
 Times are fixed: a scene shows the dates its `log_id`s say. For a screenshot
@@ -232,7 +235,7 @@ file in `scenes/`.
 
 An image embed is an `upload` embed with `og.image` (PROTOCOL.md §4.8.4);
 `image()` in `scripts/scenes/lib.mjs` makes one. Use PNG, JPEG, GIF or WebP,
-which every client can show. `scripts/scenes/whosonfirst-art.mjs` draws
+which every client can show; `npm test` checks PNG and JPEG (`.jpg`) files. `scripts/scenes/whosonfirst-art.mjs` draws
 `whosonfirst`'s as SVG and renders them to PNG.
 
 ### Readers

@@ -197,6 +197,18 @@ describe("scene extensions", () => {
 		peer.close();
 	});
 
+	it("shows read cursors, and readers in private rooms, only in a scene that has them", async () => {
+		const peer = await connect("/homealone");
+		const { server, pushed } = await opening(peer);
+		expect(server.params.ext.settings).toEqual({ read_cursors: true, read_receipts: "private" });
+		const read = pushed.find((frame: any) => frame.method === "activity" && frame.params.room_id === "dm-kevin" && frame.params.from.user_id === "kevin");
+		expect(read?.params.read_message_id).toMatch(/^\d+$/);
+		peer.close();
+		const other = await connect("/rich");
+		expect((await opening(other)).server.params.ext.settings).toEqual({ read_cursors: false });
+		other.close();
+	});
+
 	it("leaves out what a scene doesn't have", async () => {
 		const peer = await connect("/whosonfirst");
 		const { server } = await opening(peer);
