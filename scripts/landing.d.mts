@@ -8,4 +8,4 @@ export interface SceneSummary {
 	features: string[];
 }
 export function describe(text: string): SceneSummary;
-export function landing(scenes: [name: string, text: string][]): string;
+export function landing(scenes: [name: string, text: string][], options?: { version?: (path: string) => string | undefined }): string;

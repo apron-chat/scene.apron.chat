@@ -60,9 +60,25 @@ const initials = (title) => (title.match(/[\p{L}\p{N}]+/gu) ?? ["?"]).slice(0, 2
 
 const plural = (count, word) => `${count} ${count === 1 ? word.replace(/s$/, "") : word}`;
 
-function card(name, scene) {
-	const path = (url) => (url?.startsWith(`${CANONICAL}/`) ? url.slice(CANONICAL.length) : undefined);
-	const avatar = path(scene.avatar);
+/**
+ * Where the card's image loads from: the scene's header `avatar`, as clients show it for the server. One on the
+ * scene's own origin loads from this page's host, with `version(path)` added, so that a new image under the same
+ * name loads at once rather than when the old one's cache runs out; one elsewhere (`https:`, or a small inline
+ * image) as it is. Anything else: none, and the card shows initials.
+ */
+function avatarSource(avatar, version) {
+	if (typeof avatar !== "string") return undefined;
+	if (avatar.startsWith(`${CANONICAL}/`)) {
+		const path = avatar.slice(CANONICAL.length);
+		const v = version?.(path);
+		return v ? `${path}?v=${v}` : path;
+	}
+	if (/^https:\/\//.test(avatar) || /^data:image\/(png|jpeg|gif|webp);base64,/.test(avatar)) return avatar;
+	return undefined;
+}
+
+function card(name, scene, version) {
+	const avatar = avatarSource(scene.avatar, version);
 	const title = scene.title ?? name;
 	const counts = Object.entries(scene.counts)
 		.filter(([, count]) => count > 0)
@@ -85,9 +101,12 @@ ${avatar ? `<img class="avatar" src="${escape(avatar)}" width="56" height="56" a
 </article>`;
 }
 
-/** The page, for `scenes`: [name, file text] in the order to show them. */
-export function landing(scenes) {
-	const cards = scenes.map(([name, text]) => card(name, describe(text))).join("\n");
+/**
+ * The page, for `scenes`: [name, file text] in the order to show them. Everything on a card comes from its scene's
+ * file. `version`, given a served path such as `/piper/scene.png`, names that file's contents (the build hashes it).
+ */
+export function landing(scenes, { version } = {}) {
+	const cards = scenes.map(([name, text]) => card(name, describe(text), version)).join("\n");
 	return `<!doctype html>
 <html lang="en">
 <head>
