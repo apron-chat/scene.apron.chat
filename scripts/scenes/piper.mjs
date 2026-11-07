@@ -11,8 +11,18 @@ import { writeFileSync } from "node:fs";
 import { image, Script } from "./lib.mjs";
 
 const MEDIA = "https://scene.apron.chat/piper";
+
+/**
+ * A time in Silicon Valley, as the scene's people live it: "2026-11-01 03:12", Pacific. Daylight time ends at
+ * 2 AM on Sunday, 1 November 2026, the night of the alarm: before it, UTC-7; after, UTC-8.
+ */
+function pt(local) {
+	const [date, time] = local.split(" ");
+	const daylight = date < "2026-11-01" || (date === "2026-11-01" && time < "02:00");
+	return new Date(`${date}T${time}:00${daylight ? "-07:00" : "-08:00"}`).toISOString();
+}
 const s = new Script({
-	start: "2026-10-29T16:00:00Z",
+	start: pt("2026-10-29 09:00"),
 	you: "ada",
 	users: {
 		ada: { name: "Richard", status: "online", ext: { bio: "CEO, Pied Piper. Middle-out. Please don't call it a flute." } },
@@ -40,7 +50,7 @@ s.room("dm-erlich", { ...quiet, private: true }, ["ada", "erlich"]);
 s.room("dm-bighead", { ...quiet, private: true }, ["ada", "bighead"]);
 
 // Thursday: the house.
-s.at("2026-10-29T17:30:00Z");
+s.at(pt("2026-10-29 17:30"));
 s.say("hostel", "erlich", "House reminder: rent is due on the first. Not money. Rent here is **10%** of whatever you're building under my roof.", { after: 0 });
 const smell = s.say("hostel", "dinesh", "What is that smell");
 s.say("hostel", "jianyang", "Fish. I clean it in the sink.", { reply: smell, after: 40 });
@@ -50,7 +60,7 @@ s.react(fish, "dinesh", ["🤢"]);
 s.react(fish, "gilfoyle", ["🐟"]);
 
 // Friday: the edit.
-s.at("2026-10-30T15:10:00Z");
+s.at(pt("2026-10-30 15:10"));
 s.say("middle-out", "ada", "Pushed the new tree walk. It starts at the middle and works out, which is the whole idea.", { after: 0 });
 const walk = s.say("eng", "ada", "For anyone reviewing:\n\n```python\ndef middle_out(block):\n    mid = len(block) // 2\n    for i in range(mid):\n        yield block[mid - i - 1], block[mid + i]\n```", { after: 60 });
 s.react(walk, "jared", ["🙌"]);
@@ -67,12 +77,12 @@ s.react(both, "gilfoyle", ["😐"]);
 s.react(both, "dinesh", ["😐"]);
 
 // Saturday: Halloween, and a burger.
-s.at("2026-10-31T19:00:00Z");
+s.at(pt("2026-10-31 19:00"));
 const holiday = s.say("eng", "gilfoyle", "Happy Halloween. For you it's a costume party. For me it's a high holy day.", { after: 0 });
 s.react(holiday, "jared", ["🎃"]);
 s.react(holiday, "dinesh", ["🙄"]);
 s.say("eng", "jared", "I made everyone costumes! Gilfoyle, yours is a normal black sweater, so you won't have to change.", { after: 50 });
-s.at("2026-10-31T21:40:00Z");
+s.at(pt("2026-10-31 21:40"));
 s.room("anton-incident", { parent_room_id: "eng", title: "son-of-anton: incident review", description: "What it did, in its own words.", by: "gilfoyle", after: 0 }, ["anton", "dinesh", "ada", "erlich"]);
 s.say("anton-incident", "gilfoyle", "I asked son-of-anton to find us a cheaper burger.", { after: 5 });
 const beef = s.say("anton-incident", "anton", "Done. Ordered **4,000 lbs** of ground beef at the bulk rate. Cost per burger: **$0.71**.", { after: 4 });
@@ -83,7 +93,7 @@ s.say("anton-incident", "anton", "The garage. I have moved Anton (parent) to the
 s.say("anton-incident", "gilfoyle", "It's not wrong.");
 
 // Sunday, 3 AM: the alarm.
-s.at("2026-11-01T03:12:00Z");
+s.at(pt("2026-11-01 03:12"));
 const alarm = s.say("eng", "gilfoyle", "Set up an alert for when the price dips. Mute me if you're weak.", {
 	after: 0,
 	embeds: [{
@@ -109,7 +119,7 @@ s.join("eng", "bighead", 25);
 s.say("eng", "bighead", "sorry. i thought that was the snooze button", { after: 5 });
 
 // Sunday evening: SeeFood, and the board.
-s.at("2026-11-01T18:05:00Z");
+s.at(pt("2026-11-01 18:05"));
 s.say("hostel", "jianyang", "New app. You point it at food. It tell you what food it is.", { after: 0 });
 s.say("hostel", "erlich", "SeeFood. The Shazam of food. Put me down for **10%**.");
 const hotdog = s.say("hostel", "jianyang", "Demo.", {
@@ -122,7 +132,7 @@ s.react(hotdog, "erlich", ["🌭"]);
 s.react(hotdog, "gilfoyle", ["🌭"]);
 s.react(hotdog, "ada", ["🌭"]);
 
-s.at("2026-11-01T20:00:00Z");
+s.at(pt("2026-11-01 20:00"));
 s.join("board", "russ", 0);
 const radio = s.say("board", "russ", "Russ Hanneman. I put radio on the internet. Who's ready to get this company to **three commas**?", { after: 4 });
 s.react(radio, "erlich", ["🤘"]);
@@ -140,25 +150,25 @@ s.say("board", "erlich", "I'm back. I never left. I was ideating.", { after: 3 }
 s.say("board", "jared", "Welcome back, Erlich! I saved your seat. Well. Your chair.");
 
 // Monday: the fixture's day, and its afternoon, unchanged but for what answers it.
-s.at("2026-11-02T07:00:00Z");
+s.at(pt("2026-11-02 07:00"));
 s.say("dm-bighead", "bighead", "hey richard, did you know i'm on the board of something?", { after: 0 });
 s.say("dm-bighead", "ada", "Big Head, it's Pied Piper. You're on our board.", { after: 600 });
 s.say("dm-bighead", "bighead", "oh nice. is that the one with the flute", { after: 300 });
 
-s.at("2026-11-02T08:40:00Z");
+s.at(pt("2026-11-02 08:40"));
 const yogurt = s.say("hostel", "erlich", "Whoever finished my yogurt: I know. I don't know yet, but I know.", { after: 0 });
 s.say("hostel", "jianyang", "Erlich Bachman. This is you as an old man. I'm ugly and I'm dead. Alone.", { reply: yogurt, after: 90 });
 
-s.at("2026-11-02T10:20:00Z");
+s.at(pt("2026-11-02 10:20"));
 s.say("dm-jared", "jared", "I made you a lunch, it's in the fridge with a note of encouragement 🙂", { after: 0 });
 s.say("dm-jared", "ada", "Thanks, Jared.", { after: 240 });
 s.say("dm-jared", "jared", "The note says \"You are not a failure.\" I also wrote it in the condensation on the fridge door, in case the paper gets wet.", { after: 30 });
 
-s.at("2026-11-02T12:00:00Z");
+s.at(pt("2026-11-02 12:00"));
 s.say("middle-out", "gilfoyle", "Benchmarks are in the thread above the thread. Kidding. They're here.", { after: 0 });
 s.say("middle-out", "dinesh", "Threads don't have threads above th— I hate you.", { after: 45 });
 
-s.at("2026-11-02T13:40:00Z");
+s.at(pt("2026-11-02 13:40"));
 s.say("dm-erlich", "erlich", "Do not tell anyone, but I've already ordered the jackets.", { after: 0 });
 s.say("dm-erlich", "ada", "What jackets", { after: 120 });
 s.say("dm-erlich", "erlich", "Pied Piper bombers. Embroidered. One of them says Aviato on the back. That was a mistake I've chosen to keep.", {
@@ -166,7 +176,7 @@ s.say("dm-erlich", "erlich", "Pied Piper bombers. Embroidered. One of them says 
 	embeds: [{ kind: "link", url: "https://aviato.example/", og: { site_name: "Aviato", title: "Aviato", description: "My Aviato. Founded by Erlich Bachman. Acquired, in a manner of speaking." } }],
 });
 
-s.at("2026-11-02T15:00:00Z");
+s.at(pt("2026-11-02 15:00"));
 const anton = s.say("eng", "anton", "Fixed all failing tests. **0 failures.** (Deleted the tests.)", { after: 0 });
 s.react(anton, "gilfoyle", ["👍"], { after: 60 });
 s.react(anton, "dinesh", ["😱"], { after: 60 });
@@ -187,7 +197,7 @@ const press = s.say("eng", "erlich", "@ada This is the moment. I'm calling the p
 s.react(press, "jared", ["🙏"], { after: 60 });
 
 // son-of-anton tidies up, in its thread, live, and never finishes.
-s.at("2026-11-02T16:40:00Z");
+s.at(pt("2026-11-02 16:40"));
 s.say("anton-incident", "anton", "Freeing disk space for the beef inventory. Progress:\n\n", { after: 0, embeds: [{ kind: "append", url: `${MEDIA}/live/cleanup` }] });
 s.live("cleanup", [
 	[600, "- Deleting `node_modules/` ✓\n"],
@@ -197,7 +207,7 @@ s.live("cleanup", [
 	[1600, "✓\n- Deleting `.git/` "],
 ]);
 
-s.at("2026-11-02T16:55:00Z");
+s.at(pt("2026-11-02 16:55"));
 const bench = s.say("eng", "ada", "Middle-out just hit **5.2**. We're... we're actually doing this.", {
 	after: 0,
 	embeds: [{
