@@ -193,7 +193,7 @@ describe("scene extensions", () => {
 		const peer = await connect("/rich");
 		const { server, pushed } = await opening(peer);
 		expect(server.params.capabilities).toContain("activity");
-		expect(pushed.at(-1)).toEqual({ method: "activity", params: { room_id: "design", from: { user_id: "tomas", name: "Tomás" }, typing: 600 } });
+		expect(pushed.at(-1)).toEqual({ method: "activity", params: { room_id: "design", from: { user_id: "tomas", name: "Tomás" }, typing: 5 } });
 		peer.close();
 	});
 

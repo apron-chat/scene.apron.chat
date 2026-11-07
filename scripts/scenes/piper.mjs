@@ -219,7 +219,7 @@ const bench = s.say("eng", "ada", "Middle-out just hit **5.2**. We're... we're a
 s.react(bench, "jared", ["🎉", "🥹"], { after: 60 });
 s.react(bench, "dinesh", ["🤯"], { after: 60 });
 s.react(bench, "erlich", ["🚀"], { after: 1 });
-s.typing("eng", "gilfoyle", 600);
+s.typing("eng", "gilfoyle");
 
 const out = new URL("../../scenes/piper/scene.jsonl", import.meta.url);
 writeFileSync(

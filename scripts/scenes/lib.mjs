@@ -103,9 +103,10 @@ export class Script {
 
 	/**
 	 * `user_id` typing in a room when the scene is read, for `seconds` (scene extension `activity`, sent as PROTOCOL.md
-	 * §4.6's `activity` notification after everything else).
+	 * §4.6's `activity` notification after everything else). A few seconds by default: long enough to show in a
+	 * screenshot taken as the scene loads, and gone soon after for anyone reading it.
 	 */
-	typing(room_id, user_id, seconds = 600) {
+	typing(room_id, user_id, seconds = 5) {
 		this.#room(room_id);
 		this.#activity.push({ room_id, from: this.#from(user_id), typing: seconds });
 	}

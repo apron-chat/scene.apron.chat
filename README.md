@@ -181,7 +181,7 @@ them.
 {"apron_archive":1,"server":"wss://scene.apron.chat/demo","you":{"user_id":"viewer","name":"Viewer"},"title":"Demo","description":"A scene.","room":"general"}
 {"joined":[{"room_id":"general","log_id":"1774546201000","title":"General","latest_log_id":"1774546230000","history_log_id":"1774546201000","members":[{"user_id":"ada"},{"user_id":"viewer"}]}],"not_joined":[],"users":[{"user_id":"ada","name":"Ada","status":"online"},{"user_id":"viewer","name":"Viewer"}]}
 {"messages":[{"message_id":"1774546230000","log_id":"1774546230000","room_id":"general","from":{"user_id":"ada","name":"Ada"},"body":{"text":"Hi!"}}]}
-{"activity":[{"room_id":"general","from":{"user_id":"ada","name":"Ada"},"typing":600}]}
+{"activity":[{"room_id":"general","from":{"user_id":"ada","name":"Ada"},"typing":5}]}
 ```
 
 | where | key | what it does |
@@ -189,7 +189,7 @@ them.
 | header | `title`, `description`, `avatar` | the `server` frame's (PROTOCOL.md §3.1) |
 | header | `room` | the room or thread that `/<name>` opens on |
 | `users` | `status` (and `seen`) | presence: the server advertises `status`, and sends each user's status at sign-in (§4.5.4). An archive leaves these out |
-| part | `activity` | `activity` notifications' params, such as typing, sent after everything else; the server advertises `activity` |
+| part | `activity` | `activity` notifications' params, such as typing, sent after everything else; the server advertises `activity`. Keep typing short (the scripts use 5 seconds): long enough to show in a screenshot, gone soon after a visitor arrives |
 | part | `live` | live text by id, `{"<id>": [[ms, "text"], ...]}`, served at `/<name>/live/<id>`: each chunk after its wait, then held open for 30 minutes, so a `terminal` or `append` embed whose `url` is there shows it live |
 
 Times are fixed: a scene shows the dates its `log_id`s say. For a screenshot
