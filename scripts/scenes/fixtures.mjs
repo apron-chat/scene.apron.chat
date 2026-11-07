@@ -1,10 +1,11 @@
-// Writes scenes/{team,agent,rich,piper}/scene.jsonl from apron.chat's screenshot
+// Writes scenes/{team,agent,rich}/scene.jsonl from apron.chat's screenshot
 // fixtures (screenshot/scenes/*.js there, copied unchanged into fixtures/):
 // the same users, rooms, messages, reactions, typing, files and live terminal
 // output, as static scenes. The fixture server timed them in minutes before it
 // started; here they end at END, a fixed time. Pictures in a scene's directory
 // add what the fixtures don't have: <user_id>.png is that user's avatar, and
-// scene.png the scene's (piper-art.mjs draws piper's).
+// scene.png the scene's. (apron.chat's piper fixture grew into its own
+// script, piper.mjs.)
 //
 //   node scripts/scenes/fixtures.mjs [name ...]
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -20,7 +21,6 @@ const SCENES = {
 	team: { title: "Team chat", description: "A small team's day: a thread, a bot, an admin, replies, a code block, reactions and presence." },
 	agent: { title: "Coding agent", description: "A coding agent fixing a flaky test in a thread, with a finished terminal run and a live one." },
 	rich: { title: "Design review", description: "An uploaded image, a mention, a link preview, reactions, and someone typing." },
-	piper: { title: "Pied Piper", description: "A benchmark in a terminal, a rival's press release, an overeager bot, a feud in replies, and DMs." },
 };
 
 for (const name of process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(SCENES)) {

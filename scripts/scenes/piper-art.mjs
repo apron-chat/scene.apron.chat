@@ -1,9 +1,8 @@
 // Draws the piper scene's pictures into scenes/piper/: a face for each person,
 // one feature apiece so they read at avatar size, and the scene's own image,
-// a flute and its notes. Each is an SVG rendered to PNG, which every client
-// can show. fixtures.mjs picks them up by name: <user_id>.png is that user's
-// avatar, scene.png the scene's. The PNGs are committed; run this only to
-// change them:
+// a flute and its notes, and Jian-Yang's SeeFood demo. Each is an SVG rendered
+// to PNG, which every client can show; piper.mjs names them. The PNGs are
+// committed; run this only to change them:
 //
 //   node scripts/scenes/piper-art.mjs
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -142,3 +141,73 @@ png(
 		<circle cx="420" cy="220" r="17"/><rect x="433" y="166" width="7" height="56"/>
 	</g>`,
 );
+
+// Jian-Yang: a black bowl cut, and no expression at all.
+png(
+	"jianyang.png",
+	"#8ecae6",
+	person({
+		shirt: "#e76f51",
+		skin: "#e8c39e",
+		back: `<path d="M134 250 Q130 120 256 114 Q382 120 378 250 L366 250 Q360 180 256 178 Q152 180 146 250 Z" fill="#141414"/>`,
+		front: `<path d="M136 214 Q140 112 256 110 Q372 112 376 214 L376 206 Q256 196 136 206 Z" fill="#141414"/>`,
+		mouth: "M236 324 L276 324",
+	}),
+);
+
+// Russ Hanneman: frosted tips, and an open collar.
+png(
+	"russ.png",
+	"#ffb703",
+	person({
+		shirt: "#1d3557",
+		skin: "#e9b48f",
+		front: `<path d="M146 200 L160 112 L190 160 L210 92 L236 152 L256 84 L276 152 L302 92 L322 160 L352 112 L366 200 Q330 170 256 168 Q182 170 146 200 Z" fill="#f2d16b"/>
+		<path d="M206 392 L256 452 L306 392" fill="#e9b48f"/>`,
+		mouth: "M212 314 Q256 352 300 314 Z",
+	}),
+);
+
+// Monica: shoulder-length hair, and a level look.
+png(
+	"monica.png",
+	"#b8c0ff",
+	person({
+		shirt: "#2b2d42",
+		skin: "#f3d0b5",
+		back: `<path d="M128 260 Q124 112 256 108 Q388 112 384 260 L392 380 L320 380 L320 250 L192 250 L192 380 L120 380 Z" fill="#7b3f20"/>`,
+		front: `<path d="M140 220 Q150 116 256 116 Q362 116 372 220 Q330 150 256 150 Q190 150 140 220 Z" fill="#7b3f20"/>`,
+		mouth: "M230 322 Q256 330 282 322",
+	}),
+);
+
+// SeeFood: two phones, a verdict each.
+{
+	const phone = (x, food, verdict, color) => `
+	<rect x="${x}" y="90" width="380" height="640" rx="44" fill="${INK}"/>
+	<rect x="${x + 20}" y="130" width="340" height="560" rx="16" fill="#fdfdfb"/>
+	<rect x="${x + 20}" y="130" width="340" height="90" fill="${color}"/>
+	<text x="${x + 190}" y="192" font-family="Inter" font-weight="900" font-size="${verdict.length > 9 ? 34 : 44}" fill="#ffffff" text-anchor="middle">${verdict}</text>
+	${food}
+	<rect x="${x + 120}" y="610" width="140" height="44" rx="22" fill="#e5e7eb"/>
+	<text x="${x + 190}" y="640" font-family="Inter" font-weight="700" font-size="22" fill="${INK}" text-anchor="middle">SeeFood</text>`;
+	const hotdog = (cx, cy) => `
+	<rect x="${cx - 130}" y="${cy - 34}" width="260" height="68" rx="34" fill="#e9c46a"/>
+	<rect x="${cx - 150}" y="${cy - 18}" width="300" height="36" rx="18" fill="#c0392b"/>
+	<path d="M${cx - 120} ${cy} q20 -14 40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="#f4d03f" stroke-width="6"/>
+	<rect x="${cx - 130}" y="${cy + 8}" width="260" height="34" rx="17" fill="#e9c46a"/>`;
+	const pizza = (cx, cy) => `
+	<path d="M${cx} ${cy + 110} L${cx - 110} ${cy - 90} Q${cx} ${cy - 130} ${cx + 110} ${cy - 90} Z" fill="#f4d35e"/>
+	<path d="M${cx - 110} ${cy - 90} Q${cx} ${cy - 130} ${cx + 110} ${cy - 90} L${cx + 100} ${cy - 72} Q${cx} ${cy - 110} ${cx - 100} ${cy - 72} Z" fill="#d4a373"/>
+	${[[-30, -50], [35, -40], [0, 10], [-15, 55]].map(([dx, dy]) => `<circle cx="${cx + dx}" cy="${cy + dy}" r="16" fill="#c0392b"/>`).join("")}`;
+	writeFileSync(
+		new URL("seefood.png", out),
+		new Resvg(
+			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><rect width="1200" height="800" fill="#f1f0ea"/>
+			${phone(150, hotdog(340, 420), "HOTDOG ✓", "#2a9d8f")}
+			${phone(670, pizza(860, 420), "NOT HOTDOG ✗", "#c0392b")}</svg>`,
+			{ fitTo: { mode: "width", value: 1200 }, font: { loadSystemFonts: true, defaultFontFamily: "Inter" } },
+		).render().asPng(),
+	);
+	console.log("scenes/piper/seefood.png");
+}

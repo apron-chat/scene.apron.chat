@@ -124,11 +124,13 @@ them.
 | [`team`](https://scene.apron.chat/team) | a small team's General room: a thread, a bot, an admin, replies, a code block, reactions, presence |
 | [`agent`](https://scene.apron.chat/agent) | a coding agent in a thread, with a finished terminal run and a live one |
 | [`rich`](https://scene.apron.chat/rich) | an uploaded image, a mention, a link preview, reactions, typing |
-| [`piper`](https://scene.apron.chat/piper) | a terminal benchmark, a link preview, a bot, replies, a mention, a thread and DMs |
+| [`piper`](https://scene.apron.chat/piper) | Pied Piper's long weekend: an edit that starts a thread, a 3 AM terminal alarm, a bot's incident review, live text that never finishes, a board seat that walks out, a deleted video, DMs |
 
-`team`, `agent`, `rich` and `piper` are apron.chat's screenshot scenes
+`team`, `agent` and `rich` are apron.chat's screenshot scenes
 (`screenshot/scenes/` there), copied unchanged into `scripts/scenes/fixtures/`
-and converted by `scripts/scenes/fixtures.mjs`.
+and converted by `scripts/scenes/fixtures.mjs`. `piper` began as the fourth,
+and grew into its own script, `scripts/scenes/piper.mjs`, whose last
+afternoon is still that fixture's.
 
 ### Adding a scene
 
@@ -162,7 +164,7 @@ To write the file:
   `scripts/scenes/fixtures/`, give it a title in `fixtures.mjs`, and run
   `node scripts/scenes/fixtures.mjs <name>`. Pictures in the scene's directory add what
   a fixture doesn't have: `<user_id>.png` becomes that user's avatar, and
-  `scene.png` the scene's own (`scripts/scenes/piper-art.mjs` draws piper's).
+  `scene.png` the scene's own.
 
 ### The file
 
