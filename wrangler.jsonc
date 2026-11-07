@@ -1,4 +1,4 @@
-// scene.apron.chat: Apron archives (scenes/*.jsonl) served read-only over the
+// scene.apron.chat: Apron archives (scenes/<name>/scene.jsonl) served read-only over the
 // protocol by one Worker, compiled into it at build time. See README.md.
 //
 // Workers Builds ignores `build`: its Build command must also be
@@ -15,8 +15,8 @@
 	// there rather than at the dev server.
 	"dev": { "host": "localhost:8787" },
 	"build": { "command": "npm run build" },
-	// /<name>.jsonl is the scene's file, served without running the Worker.
-	// Every other path runs it: no other file is in scenes/.
+	// Each scene's directory, its file (/<name>/scene.jsonl) and its media,
+	// served without running the Worker. Every other path runs it.
 	"assets": { "directory": "./scenes" },
 	// WebSockets per client address, checked before a scene is served. The
 	// namespace_id is unique within the account.

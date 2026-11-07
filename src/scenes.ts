@@ -1,7 +1,7 @@
 import { CANONICAL_ORIGIN, type CompiledScene } from "./scene";
 import { SCENES } from "./scenes.gen";
 
-/** A scene's name: its file's, `scenes/<name>.jsonl`. */
+/** A scene's name: its directory's, `scenes/<name>/`. */
 export const SCENE_NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 /** Scenes as served from origins other than `CANONICAL_ORIGIN`, made once per isolate. */

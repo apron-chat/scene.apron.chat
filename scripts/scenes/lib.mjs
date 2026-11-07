@@ -6,7 +6,7 @@
 //   s.room("general", { title: "General" }, ["ada", "bob"]);
 //   const hi = s.say("general", "ada", "Hi @bob", { mentions: ["bob"] });
 //   s.react(hi, "bob", ["👋"]);
-//   writeFileSync("scenes/demo.jsonl", s.archive({ title: "Demo" }));
+//   writeFileSync("scenes/demo/scene.jsonl", s.archive({ title: "Demo" }));
 
 /**
  * An image embed (PROTOCOL.md §4.8): a file at `url`, shown from its `og.image`. `url` is on the scene's own origin,

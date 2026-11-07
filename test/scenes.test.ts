@@ -7,7 +7,7 @@ import { SCENE_NAME } from "../src/scenes";
 const SERVED = new Set(Object.keys(import.meta.glob("../scenes/**/*.png")).map((path) => path.slice("../scenes".length)));
 
 const FILES = Object.fromEntries(
-	Object.entries(import.meta.glob<string>("../scenes/*.jsonl", { query: "?raw", import: "default", eager: true })).map(([path, text]) => [path.slice("../scenes/".length, -".jsonl".length), text]),
+	Object.entries(import.meta.glob<string>("../scenes/*/scene.jsonl", { query: "?raw", import: "default", eager: true })).map(([path, text]) => [path.slice("../scenes/".length, -"/scene.jsonl".length), text]),
 );
 
 it("bundles every scene, compiled from its file as it is now", () => {
@@ -16,7 +16,7 @@ it("bundles every scene, compiled from its file as it is now", () => {
 });
 
 /** Every scene in scenes/ is one a client can read whole: what it refers to is in it. */
-describe.each(Object.entries(FILES))("scenes/%s.jsonl", (name, text) => {
+describe.each(Object.entries(FILES))("scenes/%s/scene.jsonl", (name, text) => {
 	const lines = text.trim().split("\n").map((line) => JSON.parse(line));
 	const header = lines[0];
 	const scene = parseScene(text);

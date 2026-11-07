@@ -7,7 +7,7 @@ import { getScene, SCENE_NAME, sceneNames } from "./scenes";
  *
  * - `/<name>`, a WebSocket: the scene, served by this Worker (`serve`).
  * - `/<name>`, a page visit: a redirect to `link.apron.chat`, which opens the scene in a client.
- * - `/<name>.jsonl`: the scene's file, a static asset that never runs this Worker, as is its media in `/<name>/`.
+ * - `/<name>/scene.jsonl`: the scene's file, a static asset that never runs this Worker, as is its media in `/<name>/`.
  * - `/<name>/live/<id>`: a scene's live text, written on its timeline (`serveLive`).
  * - `/`: the list of scenes.
  *
@@ -47,7 +47,7 @@ function index(url: URL): Response {
 	const rows = sceneNames()
 		.map((name) => {
 			const title = getScene(name)!.title ?? name;
-			return `<li><a href="/${name}">${escape(title)}</a> <code>${escape(`wss://${url.host}/${name}`)}</code> <a href="/${name}.jsonl">jsonl</a></li>`;
+			return `<li><a href="/${name}">${escape(title)}</a> <code>${escape(`wss://${url.host}/${name}`)}</code> <a href="/${name}/scene.jsonl">jsonl</a></li>`;
 		})
 		.join("\n");
 	const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Apron scenes</title>

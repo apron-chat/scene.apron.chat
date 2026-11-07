@@ -1,4 +1,4 @@
-// Writes scenes/{team,agent,rich,piper}.jsonl from apron.chat's screenshot
+// Writes scenes/{team,agent,rich,piper}/scene.jsonl from apron.chat's screenshot
 // fixtures (screenshot/scenes/*.js there, copied unchanged into fixtures/):
 // the same users, rooms, messages, reactions, typing, files and live terminal
 // output, as static scenes. The fixture server timed them in minutes before it
@@ -73,7 +73,8 @@ for (const name of process.argv.slice(2).length ? process.argv.slice(2) : Object
 	}
 
 	const { room, thread } = fixture.open ?? {};
-	const out = new URL(`../../scenes/${name}.jsonl`, import.meta.url);
+	mkdirSync(fileURLToPath(new URL(`../../scenes/${name}/`, import.meta.url)), { recursive: true });
+	const out = new URL(`../../scenes/${name}/scene.jsonl`, import.meta.url);
 	writeFileSync(out, s.archive({ server: `wss://scene.apron.chat/${name}`, ...SCENES[name], ...(thread ?? room ? { room: thread ?? room } : {}), ...(files.length ? { media: [ORIGIN] } : {}) }));
 	console.log(`Wrote ${fileURLToPath(out)}`);
 }

@@ -13,7 +13,7 @@ or to take the same screenshot in many clients.
 |---|---|
 | `wss://scene.apron.chat/<name>` | the scene, as an Apron server |
 | `https://scene.apron.chat/<name>` | redirects to `https://link.apron.chat/#server=wss://scene.apron.chat/<name>`, which opens it in a client. `?room=`, `?message=` and `?user=` pass on to the link. |
-| `https://scene.apron.chat/<name>.jsonl` | the scene's file |
+| `https://scene.apron.chat/<name>/scene.jsonl` | the scene's file; its media is next to it |
 | `https://scene.apron.chat/` | the list of scenes |
 
 The first scene is [`whosonfirst`](https://scene.apron.chat/whosonfirst): a
@@ -80,7 +80,7 @@ CPU milliseconds), a view costs:
   to `auth` and a few `room_list`s, each a lookup and a string write.
 - **Nothing more for staying open.** A Worker is billed no duration, and the
   server asks for no pings.
-- **Nothing for files.** The `.jsonl` and the scene's media are static
+- **Nothing for files.** A scene's `scene.jsonl` and its media are static
   assets, which don't run the Worker.
 
 | views a month | requests | CPU (at 2 ms) | over the $5 |
@@ -132,9 +132,12 @@ and converted by `scripts/scenes/fixtures.mjs`.
 
 ### Adding a scene
 
-1. Write `scenes/<name>.jsonl`. Its name is lowercase letters, digits and
-   dashes, and is its address: `wss://scene.apron.chat/<name>`.
-2. Put its pictures, if any, in `scenes/<name>/` ([Media](#media)).
+1. Make a directory, `scenes/<name>/`. Its name is lowercase letters,
+   digits and dashes, and is the scene's address:
+   `wss://scene.apron.chat/<name>`. Everything of the scene goes in it, and
+   is served from `https://scene.apron.chat/<name>/`.
+2. Write the scene in it as `scene.jsonl`, and put its pictures, if any,
+   next to it ([Media](#media)).
 3. Run `npm test`. It compiles every scene, and checks that each one is
    complete: every record is in a listed room; every author, mention, member,
    reply and parent room it names is in it; every picture it names is a file

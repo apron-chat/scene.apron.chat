@@ -1,4 +1,4 @@
-// Writes scenes/whosonfirst.jsonl: a new assistant manager's first day in a
+// Writes scenes/whosonfirst/scene.jsonl: a new assistant manager's first day in a
 // team chat where the players are named Who, What and I Don't Know. A riff on
 // the old ballpark routine that leans on what a chat adds: mentions that ping
 // the wrong person, reactions that list names, people leaving and joining,
@@ -206,7 +206,7 @@ s.say("dugout", "costello", "I don't know.");
 const third = s.say("dugout", "idontknow", "third base! 🙋", { after: 3 });
 s.react(third, "costello", ["🤦"]);
 
-const out = new URL("../../scenes/whosonfirst.jsonl", import.meta.url);
+const out = new URL("../../scenes/whosonfirst/scene.jsonl", import.meta.url);
 writeFileSync(
 	out,
 	s.archive({
