@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+src/scenes.gen.ts
+.dev.vars
+worker-configuration.d.ts
