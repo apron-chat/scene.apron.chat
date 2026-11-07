@@ -95,7 +95,7 @@ const PACKING = (done) => `Packing list. Check yourself off when your suitcase i
 	["Fuller", "(no Pepsi in the suitcase)"],
 	["Heather", ""],
 	["Kevin", ""],
-].map(([kid, note]) => `- ${done.includes(kid) ? "✅" : "⬜"} ${kid} ${note}`.trimEnd()).join("\n")}`;
+].map(([kid, note]) => `- [${done.includes(kid) ? "x" : " "}] ${kid} ${note}`.trimEnd()).join("\n")}`;
 const packing = s.say("family", "kate", PACKING([]), { after: 0 });
 s.react(packing, "peter", ["🙏"]);
 s.say("family", "linnie", "*J'ai fini.*", { reply: packing, after: 600 });
