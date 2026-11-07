@@ -102,5 +102,5 @@
 {"reactions":[{"log_id":"1793667360000","message_id":"1793667300000","room_id":"eng","reactions":[{"from":{"user_id":"jared","name":"Jared","avatar":"https://scene.apron.chat/piper/jared.png"},"emojis":["🎉","🥹"]}]}]}
 {"reactions":[{"log_id":"1793667420000","message_id":"1793667300000","room_id":"eng","reactions":[{"from":{"user_id":"dinesh","name":"Dinesh","avatar":"https://scene.apron.chat/piper/dinesh.png"},"emojis":["🤯"]}]}]}
 {"reactions":[{"log_id":"1793667421000","message_id":"1793667300000","room_id":"eng","reactions":[{"from":{"user_id":"erlich","name":"Erlich","avatar":"https://scene.apron.chat/piper/erlich.png","roles":["10%"]},"emojis":["🚀"]}]}]}
-{"activity":[{"room_id":"eng","from":{"user_id":"gilfoyle","name":"Gilfoyle","avatar":"https://scene.apron.chat/piper/gilfoyle.png","roles":["admin"]},"typing":600}]}
+{"activity":[{"room_id":"eng","from":{"user_id":"gilfoyle","name":"Gilfoyle","avatar":"https://scene.apron.chat/piper/gilfoyle.png","roles":["admin"]},"typing":5}]}
 {"live":{"cleanup":[[600,"- Deleting `node_modules/` ✓\n"],[700,"- Deleting `dist/` ✓\n"],[900,"- Deleting `tests/` ✓ (already passing)\n"],[1100,"- Deleting `src/` "],[1600,"✓\n- Deleting `.git/` "]]}}

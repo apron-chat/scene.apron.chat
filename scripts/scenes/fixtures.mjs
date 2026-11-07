@@ -63,7 +63,7 @@ for (const name of process.argv.slice(2).length ? process.argv.slice(2) : Object
 			s.react(keys.get(reaction.key), reaction.from, reaction.emojis, at(minutesAgo(ago)));
 		}
 	}
-	for (const { room_id, user } of fixture.typing ?? []) s.typing(room_id, user, 600);
+	for (const { room_id, user } of fixture.typing ?? []) s.typing(room_id, user);
 	for (const [stream, chunks] of Object.entries(fixture.streams ?? {})) s.live(stream, chunks);
 
 	// The fixture's files, next to the scene: copied from where the fixture names them, or already there.

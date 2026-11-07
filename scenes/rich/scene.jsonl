@@ -10,4 +10,4 @@
 {"messages":[{"message_id":"1793637600000","log_id":"1793637600000","room_id":"design","from":{"user_id":"priya","name":"Priya","roles":["admin"]},"body":{"text":"@mira these look great. Can we get a stack for the meetup?","format":"markdown","mentions":["mira"]}}]}
 {"messages":[{"message_id":"1793638260000","log_id":"1793638260000","room_id":"design","from":{"user_id":"jun","name":"Jun"},"body":{"text":"And the spec for the meetup demo is up for review:","format":"markdown","embeds":[{"embed_id":"embed_spec","kind":"link","url":"https://github.com/example/team-chat/issues/212","og":{"site_name":"GitHub · example/team-chat","title":"Remember the collapsed state of the thread list","description":"The thread list forgets which rooms were folded after a reload. Keep it per room, next to the sidebar width."}}]}}]}
 {"reactions":[{"log_id":"1793638500000","message_id":"1793638260000","room_id":"design","reactions":[{"from":{"user_id":"mira","name":"Mira"},"emojis":["👍"]}]}]}
-{"activity":[{"room_id":"design","from":{"user_id":"tomas","name":"Tomás"},"typing":600}]}
+{"activity":[{"room_id":"design","from":{"user_id":"tomas","name":"Tomás"},"typing":5}]}
