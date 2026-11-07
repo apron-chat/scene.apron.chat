@@ -1,7 +1,8 @@
 """Cuts the piper scene's avatars out of piper-avatars.webp, a grid of the
 cast drawn as pixel-art caricatures, into scenes/piper/<user_id>.png: a
 square around each face, inside its own row of the grid, on the colour that
-person's avatar had before, at 256 pixels. The PNGs are committed; run this
+person's avatar had before, at 256 pixels. Someone drawn on their own, in
+piper-avatar-<user_id>.webp, is cut from that instead (SINGLES). The PNGs are committed; run this
 only to change them (it needs Pillow):
 
     python3 scripts/scenes/piper-avatars.py
@@ -17,7 +18,6 @@ ROWS = [(0, 333), (334, 667)]  # the grid's two rows, top and bottom
 
 # user_id, the centre of the face in the grid (x, y), its row, and its background.
 CAST = [
-    ("ada", 205, 135, 0, "#2a9d8f"),  # Richard
     ("gilfoyle", 640, 125, 0, "#26232b"),
     ("dinesh", 930, 125, 0, "#e9c46a"),
     ("jared", 1350, 120, 0, "#a8dadc"),
@@ -28,15 +28,28 @@ CAST = [
     ("monica", 1600, 445, 1, "#b8c0ff"),
 ]
 
-grid = Image.open(HERE / "piper-avatars.webp").convert("RGBA")
-for user_id, x, y, row, background in CAST:
-    top, bottom = ROWS[row]
-    # A little below the face's centre, for shoulders, but never into the other row.
-    y0 = max(top, min(y - SIZE // 2 + 20, bottom - SIZE))
-    face = grid.crop((x - SIZE // 2, y0, x + SIZE // 2, y0 + SIZE))
+# Drawn on their own: user_id, the square to cut (left, top, size), and its background.
+SINGLES = [
+    ("ada", (175, 30, 820), "#2a9d8f"),  # Richard, framed like the grid: head filling it, a hint of shoulders
+]
+
+
+def save(user_id, face, background):
     avatar = Image.new("RGBA", face.size, background)
     avatar.alpha_composite(face)
     # Pixel art takes a palette well: a quarter of the bytes, no visible change.
     small = avatar.convert("RGB").resize((256, 256), Image.LANCZOS)
     small.quantize(128, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(OUT / f"{user_id}.png", optimize=True)
     print(f"scenes/piper/{user_id}.png")
+
+
+grid = Image.open(HERE / "piper-avatars.webp").convert("RGBA")
+for user_id, x, y, row, background in CAST:
+    top, bottom = ROWS[row]
+    # A little below the face's centre, for shoulders, but never into the other row.
+    y0 = max(top, min(y - SIZE // 2 + 20, bottom - SIZE))
+    save(user_id, grid.crop((x - SIZE // 2, y0, x + SIZE // 2, y0 + SIZE)), background)
+
+for user_id, (left, top, size), background in SINGLES:
+    drawing = Image.open(HERE / f"piper-avatar-{user_id}.webp").convert("RGBA")
+    save(user_id, drawing.crop((left, top, left + size, top + size)), background)
