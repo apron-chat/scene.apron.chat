@@ -14,7 +14,7 @@ or to take the same screenshot in many clients.
 | `wss://scene.apron.chat/<name>` | the scene, as an Apron server |
 | `https://scene.apron.chat/<name>` | redirects to `https://link.apron.chat/#server=wss://scene.apron.chat/<name>`, which opens it in a client. `?room=`, `?message=` and `?user=` pass on to the link. |
 | `https://scene.apron.chat/<name>/scene.jsonl` | the scene's file; its media is next to it |
-| `https://scene.apron.chat/` | the list of scenes |
+| `https://scene.apron.chat/` | the landing page: every scene, what it shows, and how to open it |
 
 The first scene is [`whosonfirst`](https://scene.apron.chat/whosonfirst): a
 new assistant manager's first day in a team chat where the players are named
@@ -145,8 +145,11 @@ and converted by `scripts/scenes/fixtures.mjs`.
 4. Look at it: `npm run dev`, and open it in a client
    ([Develop](#develop)).
 
-Nothing else lists scenes: the build finds them, and the index page, the
-redirect and the server serve whatever it found.
+Nothing else lists scenes: the build finds them, writes the landing page
+from them (`scripts/landing.mjs`, as the static `scenes/index.html`), and the
+redirect and the server serve whatever it found. A scene's card on the page
+takes its `title`, `description` and `avatar` from its header, and counts
+and lists what it shows from its records.
 
 To write the file:
 

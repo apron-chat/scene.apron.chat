@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CANONICAL_ORIGIN, compileScene, parseScene, roomListKey, SceneError } from "../src/scene";
 import { SCENES } from "../src/scenes.gen";
 import { SCENE_NAME } from "../src/scenes";
+import { describe as summarize, landing } from "../scripts/landing.mjs";
 
 /** Every file served next to the scenes, by its path: what their media URLs may name. */
 const SERVED = new Set(Object.keys(import.meta.glob("../scenes/**/*.png")).map((path) => path.slice("../scenes".length)));
@@ -104,5 +105,32 @@ describe("parseScene", () => {
 		expect(messages.map((frame) => frame.params.message_id)).toEqual(["100", "102"]);
 		expect(messages[1].params.reply_to.body.text).toBe("ref");
 		expect(JSON.parse(scene.replies.get(roomListKey({}))!)).toEqual({ joined: [{ room_id: "general", title: "General" }], not_joined: [] });
+	});
+});
+
+describe("the landing page", () => {
+	const page = landing(Object.entries(FILES).sort(([a], [b]) => a.localeCompare(b)));
+
+	it("has a card for every scene, with how to open, connect to and download it", () => {
+		expect(page).toContain(`<h2 id="scenes-title"><span>§</span>${Object.keys(FILES).length} scenes</h2>`);
+		for (const name of Object.keys(FILES)) {
+			expect(page).toContain(`<article class="scene" id="${name}">`);
+			expect(page).toContain(`<a class="button" href="/${name}">Open</a>`);
+			expect(page).toContain(`<code data-scene="${name}">wss://scene.apron.chat/${name}</code>`);
+			expect(page).toContain(`<a class="file" href="/${name}/scene.jsonl" download="${name}.jsonl">scene.jsonl</a>`);
+		}
+		expect(page).toContain('<h3><a href="/whosonfirst">Who&#39;s on First?</a></h3>');
+		// A scene's own avatar, from wherever the page is served; else its initials.
+		expect(page).toContain('<img class="avatar" src="/whosonfirst/scene.png"');
+		expect(page).toContain('<span class="avatar mono" aria-hidden="true">TC</span>');
+	});
+
+	it("says what each scene shows", () => {
+		expect(summarize(FILES.agent!)).toMatchObject({ counts: { rooms: 3, threads: 1, DMs: 0, people: 4 } });
+		expect(summarize(FILES.agent!).features).toEqual(expect.arrayContaining(["threads", "terminal", "live text", "presence", "badges"]));
+		expect(summarize(FILES.piper!).counts.DMs).toBe(3);
+		expect(summarize(FILES.rich!).features).toEqual(expect.arrayContaining(["images", "link previews", "typing", "mentions"]));
+		expect(summarize(FILES.whosonfirst!).features).toEqual(expect.arrayContaining(["edits", "deletions", "joins & leaves", "avatars", "bios"]));
+		expect(summarize(FILES.whosonfirst!).features).not.toContain("presence");
 	});
 });

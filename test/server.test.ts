@@ -278,11 +278,9 @@ describe("the Worker", () => {
 		expect((await SELF.fetch("https://scene.test/Who's%20on", { headers: { Upgrade: "websocket" } })).status).toBe(404);
 	});
 
-	it("lists the scenes", async () => {
-		const response = await SELF.fetch("https://scene.test/");
-		expect(response.status).toBe(200);
-		const html = await response.text();
-		expect(html).toContain('<a href="/whosonfirst">Who&#39;s on First?</a>');
+	it("leaves the landing page to the static assets", async () => {
+		// `/` is scenes/index.html, served before the Worker runs; tests reach only the Worker.
+		expect((await SELF.fetch("https://scene.test/")).status).toBe(404);
 	});
 
 	it("limits connections from one address", async () => {

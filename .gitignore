@@ -3,3 +3,4 @@ node_modules/
 src/scenes.gen.ts
 .dev.vars
 worker-configuration.d.ts
+scenes/index.html

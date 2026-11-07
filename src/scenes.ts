@@ -33,8 +33,3 @@ export function getScene(name: string, origin: string = CANONICAL_ORIGIN): Compi
 	}
 	return moved;
 }
-
-/** The names of every scene. */
-export function sceneNames(): string[] {
-	return Object.keys(SCENES).sort();
-}
