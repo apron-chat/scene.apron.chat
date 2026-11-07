@@ -148,8 +148,8 @@ and converted by `scripts/scenes/fixtures.mjs`.
 Nothing else lists scenes: the build finds them, writes the landing page
 from them (`scripts/landing.mjs`, as the static `scenes/index.html`), and the
 redirect and the server serve whatever it found. A scene's card on the page
-takes its `title`, `description` and `avatar` from its header, and counts
-and lists what it shows from its records.
+takes its `title` and `avatar` from its header, and counts and lists what
+it shows from its records.
 
 To write the file:
 

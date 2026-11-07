@@ -76,7 +76,6 @@ ${avatar ? `<img class="avatar" src="${escape(avatar)}" width="56" height="56" a
 <p class="counts">${escape(counts)}</p>
 </div>
 </div>
-${scene.description ? `<p class="desc">${escape(scene.description)}</p>` : ""}
 <ul class="tags" aria-label="What it shows">${scene.features.map((feature) => `<li>${escape(feature)}</li>`).join("")}</ul>
 <div class="use">
 <div class="address"><code data-scene="${escape(name)}">wss://scene.apron.chat/${escape(name)}</code><button type="button" class="copy" data-copy="${escape(name)}" aria-label="Copy the address of ${escape(title)}">copy</button></div>
@@ -94,8 +93,8 @@ export function landing(scenes) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Apron scenes</title>
-<meta name="description" content="Static chats served over the Apron protocol. Open one in any client to read it, test against it, or take the same screenshot everywhere.">
+<title>Apron Scenes</title>
+<meta name="description" content="Read-only scenes served over the Apron Chat Protocol, so any client can open them to explore, test, and generate screenshots.">
 <link rel="icon" href="/apron-logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,7 +131,6 @@ section > p { max-width: 680px; }
 .scene h3 a { color: var(--ink); text-decoration: none; }
 .scene h3 a:hover { color: var(--accent); text-decoration: underline; }
 .counts { font-size: 13px; color: var(--muted); }
-.desc { font-size: 14px; }
 .tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tags li { font-size: 12px; padding: 1px 8px; border: 1px solid var(--ink); }
 .use { margin-top: auto; padding-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
@@ -167,8 +165,8 @@ footer a { color: var(--muted); }
 <div class="hero">
 <img src="/apron-logo.svg" width="128" height="128" alt="The Apron logo">
 <div>
-<h1>Apron scenes</h1>
-<p class="lead">Chats that hold still. Each scene is a whole conversation served read-only over the <a href="https://apron.chat/protocol">Apron protocol</a>, so any client can open it: to read it, to test against it, or to take the same screenshot everywhere.</p>
+<h1>Apron Scenes</h1>
+<p class="lead">Read-only scenes served over the <a href="https://apron.chat/protocol">Apron Chat Protocol</a>, so any client can open them to explore, test, and generate screenshots.</p>
 </div>
 </div>
 
@@ -193,7 +191,7 @@ ${cards}
 
 <footer>
 <div class="wrap">
-<span>Apron scenes · MIT-licensed</span>
+<span>Apron Scenes · MIT-licensed</span>
 <span><a href="https://apron.chat/">apron.chat</a> · <a href="https://apron.chat/protocol">protocol</a> · <a href="${REPO}">apron-chat/scene.apron.chat</a></span>
 </div>
 </footer>
