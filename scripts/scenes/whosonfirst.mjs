@@ -6,8 +6,10 @@
 //
 //   npm run scenes
 import { writeFileSync } from "node:fs";
-import { Script } from "./lib.mjs";
+import { image, Script } from "./lib.mjs";
 
+// Its pictures, drawn by whosonfirst-art.mjs, are static files next to the scene, on its own origin.
+const MEDIA = "https://scene.apron.chat/whosonfirst";
 const player = (name, position, bio) => ({ name, roles: [position], ext: { bio } });
 const s = new Script({
 	start: "2026-03-26T17:30:00Z",
@@ -26,6 +28,7 @@ const s = new Script({
 		scorebot: { name: "Scorebot", roles: ["bot"], ext: { bio: "Posts the lineup card. Takes no questions." } },
 		bleachers: { name: "Bleachers", ext: { bio: "Here for the game." } },
 	},
+	avatars: (user_id) => `${MEDIA}/${user_id}.png`,
 });
 
 const players = ["who", "what", "idontknow", "why", "because", "tomorrow", "today", "idontgiveadarn"];
@@ -128,7 +131,14 @@ s.say("dugout", "abbott", "Started one: #whos-on-first", { after: 3 });
 const simple = s.say("whos-on-first", "costello", "Great. One simple question, in writing: who is on first?", { after: 20 });
 s.say("whos-on-first", "abbott", "It's the title of the thread.");
 s.say("whos-on-first", "costello", "I KNOW what the title of the thread is!");
-s.join("whos-on-first", "what", 15);
+const board = s.say("whos-on-first", "costello", "Fine. I drew the whole infield. Just tell me what's wrong with it.", {
+	after: 90,
+	embeds: [image(`${MEDIA}/whiteboard.png`, { title: "whiteboard.png", width: 1200, height: 800, alt: "A whiteboard with a baseball diamond: WHO? on first, WHAT? on second, I DON'T KNOW on third, and question marks everywhere" })],
+});
+s.say("whos-on-first", "abbott", "Nothing. That's the team.", { reply: board });
+s.say("whos-on-first", "abbott", "Right field's still open, though. We're looking for a guy.");
+s.say("whos-on-first", "costello", "What's his name?");
+s.join("whos-on-first", "what", 5);
 s.say("whos-on-first", "what", "somebody said my name?", { after: 3 });
 s.say("whos-on-first", "costello", "Not you, What!");
 s.say("whos-on-first", "abbott", "See, now you've got it. What's on second.");
@@ -201,6 +211,8 @@ writeFileSync(
 	out,
 	s.archive({
 		server: "wss://scene.apron.chat/whosonfirst",
+		media: ["https://scene.apron.chat"],
+		avatar: `${MEDIA}/scene.png`,
 		title: "Who's on First?",
 		description: "Opening Day in the St. Louis Wolves dugout. The new assistant manager would just like to know the players' names.",
 	}),

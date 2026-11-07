@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { compileScene, parseScene, roomListKey, SceneError } from "../src/scene";
+import { CANONICAL_ORIGIN, compileScene, parseScene, roomListKey, SceneError } from "../src/scene";
 import { SCENES } from "../src/scenes.gen";
 import { SCENE_NAME } from "../src/scenes";
+
+/** Every file served next to the scenes, by its path: what their media URLs may name. */
+const SERVED = new Set(Object.keys(import.meta.glob("../scenes/**/*.png")).map((path) => path.slice("../scenes".length)));
 
 const FILES = Object.fromEntries(
 	Object.entries(import.meta.glob<string>("../scenes/*.jsonl", { query: "?raw", import: "default", eager: true })).map(([path, text]) => [path.slice("../scenes/".length, -".jsonl".length), text]),
@@ -23,6 +26,15 @@ describe.each(Object.entries(FILES))("scenes/%s.jsonl", (name, text) => {
 		expect(header.apron_archive).toBe(1);
 		expect(typeof header.title).toBe("string");
 		expect(header.server).toBe(`wss://scene.apron.chat/${name}`);
+	});
+
+	it("names only media it has, on its own origin", () => {
+		const urls = [...text.matchAll(/"(?:url|avatar)":"([^"]+)"/g)].map((match) => match[1]!);
+		expect(urls.length).toBeGreaterThan(0);
+		for (const url of urls) {
+			expect(url.startsWith(`${CANONICAL_ORIGIN}/${name}/`), `${url} isn't on ${CANONICAL_ORIGIN}/${name}/`).toBe(true);
+			expect(SERVED.has(url.slice(CANONICAL_ORIGIN.length)), `${url} isn't a file in scenes/`).toBe(true);
+		}
 	});
 
 	it("refers only to users, rooms and messages it has", () => {

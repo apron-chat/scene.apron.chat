@@ -17,7 +17,7 @@ export default {
 		const url = new URL(request.url);
 		if (url.pathname === "/") return index(url);
 		const name = url.pathname.replace(/^\/|\/$/g, "");
-		const scene = SCENE_NAME.test(name) ? getScene(name) : undefined;
+		const scene = SCENE_NAME.test(name) ? getScene(name, url.origin) : undefined;
 		if (!scene) return text(404, "No such scene. The list is at /");
 
 		const upgrade = request.headers.get("Upgrade")?.toLowerCase() === "websocket";

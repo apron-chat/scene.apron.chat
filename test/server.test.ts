@@ -7,8 +7,8 @@ const PING = '{"method":"ping"}';
 type Frame = { id?: string; method?: string; params?: any; result?: any; error?: any };
 
 /** Opens a WebSocket to a scene and queues its frames. */
-async function connect(path = "/whosonfirst", ip = `192.0.2.${Math.floor(Math.random() * 250) + 1}`) {
-	const response = await SELF.fetch(`https://scene.test${path}`, { headers: { Upgrade: "websocket", "CF-Connecting-IP": ip } });
+async function connect(path = "/whosonfirst", ip = `192.0.2.${Math.floor(Math.random() * 250) + 1}`, host = "scene.test") {
+	const response = await SELF.fetch(`https://${host}${path}`, { headers: { Upgrade: "websocket", "CF-Connecting-IP": ip } });
 	expect(response.status).toBe(101);
 	const socket = response.webSocket!;
 	const frames: Frame[] = [];
@@ -64,10 +64,13 @@ describe("a scene over the protocol", () => {
 		const { server, auth, pushed } = await opening(peer);
 		const [rooms, ...records] = pushed;
 		expect(server!.method).toBe("server");
-		expect(server!.params).toMatchObject({ apron: 10, auth: ["guest"], ping: 45, title: "Who's on First?" });
+		expect(server!.params).toMatchObject({ apron: 10, auth: ["guest"], title: "Who's on First?", avatar: "https://scene.test/whosonfirst/scene.png" });
+		// No pings asked for: an idle connection costs nothing, and nothing needs to know it's there.
+		expect(server!.params.ping).toBeUndefined();
 		// Nothing to page: everything is here.
-		expect(server!.params.capabilities).toEqual(["rooms", "reactions", "ext:settings", "ext:permissions", "ext:archive", "ext:bio"]);
-		expect(server!.params.ext).toEqual({ settings: { read_cursors: false }, archive: { server: "wss://scene.apron.chat/whosonfirst" } });
+		expect(server!.params.capabilities).toEqual(["rooms", "reactions", "ext:settings", "ext:permissions", "ext:archive", "ext:media", "ext:bio"]);
+		// The scene's own media, served from wherever the scene is: here, https://scene.test.
+		expect(server!.params.ext).toEqual({ settings: { read_cursors: false }, archive: { server: "wss://scene.apron.chat/whosonfirst" }, media: { origins: ["https://scene.test"] } });
 
 		expect(rooms!.method).toBe("room_update");
 		expect(rooms!.params.joined.map((room: any) => room.room_id).sort()).toEqual(["dugout", "i-dont-know", "lineup", "whos-on-first"]);
@@ -166,6 +169,22 @@ describe("a scene over the protocol", () => {
 		expect(last.error.code).toBe(-32002);
 		await new Promise((resolve) => setTimeout(resolve, 50));
 		expect(loop.closed()?.code).toBe(1008);
+	});
+});
+
+describe("media", () => {
+	it("comes from the host the scene is served from", async () => {
+		for (const [host, origin] of [["scene.apron.chat", "https://scene.apron.chat"], ["scene.test", "https://scene.test"], ["preview.scene.test", "https://preview.scene.test"]]) {
+			const peer = await connect("/whosonfirst", undefined, host);
+			const { pushed } = await opening(peer);
+			const who = pushed[0]!.params.users.find((user: any) => user.user_id === "who");
+			expect(who.avatar).toBe(`${origin}/whosonfirst/who.png`);
+			const board = pushed.find((frame) => frame.method === "message" && frame.params.body?.embeds)!;
+			expect(board.params.body.embeds[0]).toMatchObject({ kind: "upload", url: `${origin}/whosonfirst/whiteboard.png`, og: { image: { url: `${origin}/whosonfirst/whiteboard.png`, width: 1200, height: 800 } } });
+			const all = pushed.map((frame) => JSON.stringify(frame)).join("\n");
+			if (origin !== "https://scene.apron.chat") expect(all).not.toContain("https://scene.apron.chat");
+			peer.close();
+		}
 	});
 });
 

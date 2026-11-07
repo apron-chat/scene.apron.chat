@@ -10,6 +10,10 @@
 	"workers_dev": false,
 	"preview_urls": true,
 	"routes": [{ "pattern": "scene.apron.chat", "custom_domain": true }],
+	// Without this, `wrangler dev` hands the Worker requests for the route's
+	// host, scene.apron.chat, and the scene's media and links would point
+	// there rather than at the dev server.
+	"dev": { "host": "localhost:8787" },
 	"build": { "command": "npm run build" },
 	// /<name>.jsonl is the scene's file, served without running the Worker.
 	// Every other path runs it: no other file is in scenes/.

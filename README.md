@@ -27,10 +27,11 @@ the server sends them and asks the client for nothing. A client can't be
 stopped from asking for some things, so those few answers are worked out up
 front too; serving a request only writes its `id` into a precomputed string.
 
-1. On connect: a `server` frame with `auth: ["guest"]`, `ping: 45`, the scene's
-   `title` and `description`, and the capabilities `rooms`, `reactions`,
+1. On connect: a `server` frame with `auth: ["guest"]`, the scene's `title`,
+   `description` and `avatar`, and the capabilities `rooms`, `reactions`,
    `ext:settings` (`read_cursors: false`), `ext:permissions`, `ext:archive`,
-   and `ext:bio` when a user has a bio. **Not `history`**: a client with it
+   `ext:media` when the header names `media` origins, and `ext:bio` when a
+   user has a bio. **No `ping`**: a client then sends none. **Not `history`**: a client with it
    would page each room; without it, a client shows what arrived live, which
    is everything.
 2. `auth`, which every client sends: it's answered with the header's `you` (or
@@ -55,46 +56,63 @@ apron-web, given the stream before it signed in, took it for an earlier
 connection's and marked a gap ("Reconnected · earlier messages aren't
 available"). Every client sends `auth`, so it costs nothing.
 
-Then the connection goes idle, answering only pings.
+Then the connection goes idle. The server never closes it: an idle WebSocket
+costs nothing on a Worker, and a closed one would only make the client
+reconnect and be sent the scene again.
 
 ## Cost
 
 The server is one Worker, with no Durable Object: a connection shares nothing
 with any other, so nothing needs to be in one place. Each scene is compiled
 at build time (`scripts/build.mjs`) into the strings that are sent, so the
-Worker parses nothing, and reads no storage. What a viewer costs, by
-[Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/):
+Worker parses nothing, and reads no storage. By
+[Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)
+(Standard: $5 a month, with 10 million requests and 30 million CPU
+milliseconds included, then $0.30 per million requests and $0.02 per million
+CPU milliseconds), a view costs:
 
-- **Connecting:** one Worker request. WebSocket messages through a Worker are
-  not requests, and a Worker is billed no duration, so the rest is CPU time.
-- **Reading:** about 130 `send`s of precomputed strings (for `whosonfirst`), and the replies to
-  `auth` and a few `room_list`s (six from apron-web), each a lookup and a
-  string write. No `history`.
-- **Staying open:** a `{"method":"pong"}` every `ping` (45 seconds), a few
-  microseconds of CPU each, and nothing for the time between.
-- **The file and the redirect:** `/<name>.jsonl` is a static asset, which
-  doesn't run the Worker. The redirect and the index are one Worker request
-  each.
+- **Two Worker requests:** the visit to `scene.apron.chat/<name>`, which
+  redirects, and the WebSocket. Messages through a Worker are not requests.
+- **About 1–2 ms of CPU** (an estimate; the Worker's metrics will tell):
+  about 130 `send`s of precomputed strings for `whosonfirst`, and the replies
+  to `auth` and a few `room_list`s, each a lookup and a string write.
+- **Nothing more for staying open.** A Worker is billed no duration, and the
+  server asks for no pings.
+- **Nothing for files.** The `.jsonl` and the scene's media are static
+  assets, which don't run the Worker.
 
-The same server in a Durable Object, with hibernation and the runtime
-answering pings, costs more: a Durable Object request on top of the Worker's,
-each incoming frame billed at 20 per request, and the object's wall-clock time
-while it handles them.
+| views a month | requests | CPU (at 2 ms) | over the $5 |
+|---|---|---|---|
+| 1 million | 2 million | 2 million ms | $0 |
+| 10 million | 20 million | 20 million ms | about $3 |
+| 100 million | 200 million | 200 million ms | about $60 |
+
+On the Free plan the same fits 100,000 requests a day, about 50,000 views,
+and then is refused rather than billed.
+
+The same server in a Durable Object costs more: a Durable Object request on
+top of the Worker's, each incoming frame billed at 20 per request, and the
+object's wall-clock time while it handles them.
 
 Cloudflare restarts Workers when it updates its runtime or a new version is
 deployed, which closes their WebSockets after a grace period. A client then
 reconnects, and is sent the scene again.
 
-Limits, against a client that misbehaves:
+### Limits
 
-- 30 WebSockets per minute from one address (the `CONNECTIONS` rate limit),
-  checked before a scene is served. Past it, the handshake is refused, and a
-  client that asks why (`?apron_connection_status=1`, apron-web EXT.md §5) is
-  told to wait a minute.
-- Frames over 4 KiB close the connection. A connection may send 100 frames at
-  once, pings included, and one more every 10 seconds after; past that, it
-  gets `retry_after` and is closed. That bounds the CPU time any one
-  connection can use.
+Both are there for a client that loops, buggy or not; a reader never meets
+them.
+
+- **30 WebSockets per minute from one address** (the `CONNECTIONS` rate
+  limit, which Cloudflare doesn't charge for; it counts per location, and
+  roughly). Past it, the handshake is refused, and a client that asks why
+  (`?apron_connection_status=1`, apron-web EXT.md §5) is told to wait a
+  minute. Without it, one machine reconnecting as fast as it can could make
+  tens of millions of requests a day, about $25. With it, one address can
+  make at most 43,200 a day, about a cent.
+- **100 frames per connection**, pings included, and none over 4 KiB.
+  apron-web sends five to seven. Past it, the connection gets `retry_after`
+  and is closed, so one connection can't run up CPU time.
 
 ## Scenes
 
@@ -103,9 +121,9 @@ and dashes. `npm run build` compiles them into the Worker, and `npm test`
 checks that each one is complete: every record is in a listed room, and every
 author, mention, member, reply and parent room it refers to is in it.
 
-A scene is an ordinary archive, with two optional keys in its header for the
-`server` frame (PROTOCOL.md §3.1): `title` and `description`. Readers of
-archives ignore keys they don't know.
+A scene is an ordinary archive, with three optional keys in its header for
+the `server` frame (PROTOCOL.md §3.1): `title`, `description` and `avatar`.
+Readers of archives ignore keys they don't know.
 
 ```jsonl
 {"apron_archive":1,"server":"wss://scene.apron.chat/demo","you":{"user_id":"viewer","name":"Viewer"},"title":"Demo","description":"A scene."}
@@ -120,6 +138,30 @@ To make one:
 - **Script it**, with `scripts/scenes/lib.mjs`, which keeps `log_id`s,
   listings and members consistent. `scripts/scenes/whosonfirst.mjs` writes
   `whosonfirst.jsonl`: run `npm run scenes` after changing it.
+
+### Media
+
+A scene's pictures, such as avatars and image embeds, are files in
+`scenes/<name>/`, served as static assets at
+`https://scene.apron.chat/<name>/<file>`, and the scene names them by those
+URLs. Clients load media from the server's own origin
+([§4.8.1](https://github.com/shazow/apron/blob/main/PROTOCOL.md#481-opengraph-metadata-og)),
+which for `wss://scene.apron.chat/<name>` is `https://scene.apron.chat`, so
+they need nothing more. The header's `media` names that origin too, so that
+the file, imported into apron-web as an archive, says where its media is
+(ARCHIVE.md §5); the server advertises it as `ext:media`.
+
+Served from another host, such as `wrangler dev` or a Preview, the scene's
+`https://scene.apron.chat` URLs are rewritten to that host's origin, so
+pictures load from there. `npm test` checks that every URL a scene names is a
+file in `scenes/`.
+
+An image embed is an `upload` embed with `og.image` (PROTOCOL.md §4.8.4);
+`image()` in `scripts/scenes/lib.mjs` makes one. Use PNG, JPEG, GIF or WebP,
+which every client can show. `scripts/scenes/whosonfirst-art.mjs` draws
+`whosonfirst`'s as SVG and renders them to PNG.
+
+### Readers
 
 The `you` of a scene is who reads it. Make it a member of the rooms it
 joined, without a membership record, so it reads as someone who came to

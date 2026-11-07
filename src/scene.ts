@@ -29,8 +29,11 @@ export const ARCHIVE_VERSION = 1;
 /** The protocol version this serves. */
 export const APRON_VERSION = 10;
 
-/** Seconds between client pings (PROTOCOL.md §1), answered by the runtime without waking the object. */
-export const PING_SECONDS = 45;
+/**
+ * The origin that scenes' own media is written with: `https://scene.apron.chat/<name>/<file>`. Served from another
+ * host, such as `wrangler dev` or a Preview, it is rewritten to that host's (`src/scenes.ts`).
+ */
+export const CANONICAL_ORIGIN = "https://scene.apron.chat";
 
 /**
  * What it advertises: rooms to list and read, nothing to write with (ARCHIVE.md §4). Not `history`: everything
@@ -178,7 +181,8 @@ export function parseScene(text: string): Scene {
 			apron: APRON_VERSION,
 			agent: "apron-scene/1",
 			auth: ["guest"],
-			ping: PING_SECONDS,
+			// No `ping`: a client then sends none (PROTOCOL.md §1). A scene is read and left, and an idle connection
+			// costs nothing, so nothing needs to know it is still there.
 			...look,
 			capabilities: [...CAPABILITIES, ...(media.length ? ["ext:media"] : []), ...(bios ? ["ext:bio"] : [])],
 			ext: { settings: { read_cursors: false }, archive, ...(media.length ? { media: { origins: media } } : {}) },

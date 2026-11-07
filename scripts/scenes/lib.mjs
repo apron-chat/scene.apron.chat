@@ -8,6 +8,15 @@
 //   s.react(hi, "bob", ["👋"]);
 //   writeFileSync("scenes/demo.jsonl", s.archive({ title: "Demo" }));
 
+/**
+ * An image embed (PROTOCOL.md §4.8): a file at `url`, shown from its `og.image`. `url` is on the scene's own origin,
+ * such as `https://scene.apron.chat/<name>/<file>`, which clients load media from (and which is rewritten when the
+ * scene is served from another host).
+ */
+export function image(url, { title, width, height, alt, type = "image/png" }) {
+	return { kind: "upload", title, url, og: { title, image: { url, type, width, height, ...(alt ? { alt } : {}) } } };
+}
+
 export class Script {
 	#at;
 	#users;
@@ -18,11 +27,13 @@ export class Script {
 
 	/**
 	 * @param {{ start: string, users: Record<string, object>, you?: string }} options
-	 *   `users` maps each user_id to its user object, without user_id. `you` is who reads the scene.
+	 *   `users` maps each user_id to its user object, without user_id. `you` is who reads the scene. `avatars`, if
+	 *   given, maps a user_id to its avatar's URL.
 	 */
-	constructor({ start, users, you }) {
+	constructor({ start, users, you, avatars }) {
 		this.#at = Date.parse(start);
-		this.#users = new Map(Object.entries(users).map(([user_id, user]) => [user_id, { user_id, ...user }]));
+		// `avatars`, when given, makes each user's `avatar` URL from their user_id.
+		this.#users = new Map(Object.entries(users).map(([user_id, user]) => [user_id, { user_id, ...user, ...(avatars ? { avatar: avatars(user_id) } : {}) }]));
 		this.#you = you;
 	}
 
@@ -36,7 +47,7 @@ export class Script {
 	#from(user_id) {
 		const user = this.#users.get(user_id);
 		if (!user) throw new Error(`unknown user ${user_id}`);
-		return { user_id, ...(user.name ? { name: user.name } : {}), ...(user.roles ? { roles: user.roles } : {}) };
+		return { user_id, ...(user.name ? { name: user.name } : {}), ...(user.avatar ? { avatar: user.avatar } : {}), ...(user.roles ? { roles: user.roles } : {}) };
 	}
 
 	#room(room_id) {
@@ -79,9 +90,10 @@ export class Script {
 
 	/**
 	 * A message; returns its id. `text` is Markdown unless `plain`. `reply` is the id of the message it replies
-	 * to. `mentions` are user_ids, which `text` writes as `@user_id` (PROTOCOL.md Appendix A.3).
+	 * to. `mentions` are user_ids, which `text` writes as `@user_id` (PROTOCOL.md Appendix A.3). `embeds` are
+	 * embed objects (PROTOCOL.md §4.8), such as `image()` makes.
 	 */
-	say(room_id, user_id, text, { after, reply, mentions, plain = false } = {}) {
+	say(room_id, user_id, text, { after, reply, mentions, embeds, plain = false } = {}) {
 		const room = this.#room(room_id);
 		const log_id = this.#next(after);
 		const message = {
@@ -89,7 +101,7 @@ export class Script {
 			log_id,
 			room_id,
 			from: this.#from(user_id),
-			body: { text, format: plain ? "plain" : "markdown", ...(mentions ? { mentions } : {}) },
+			body: { text, format: plain ? "plain" : "markdown", ...(mentions ? { mentions } : {}), ...(embeds ? { embeds } : {}) },
 			...(reply ? { reply_to: { message_id: reply } } : {}),
 		};
 		room.latest = log_id;
@@ -128,7 +140,7 @@ export class Script {
 	}
 
 	/** The archive, as JSON Lines: a header with the scene's `title` and `description`, the listing, then each record. */
-	archive({ server, title, description, exported_at }) {
+	archive({ server, title, description, avatar, exported_at, media }) {
 		const header = {
 			apron_archive: 1,
 			...(server ? { server } : {}),
@@ -136,6 +148,8 @@ export class Script {
 			...(this.#you ? { you: this.#users.get(this.#you) } : {}),
 			...(title ? { title } : {}),
 			...(description ? { description } : {}),
+			...(avatar ? { avatar } : {}),
+			...(media ? { media } : {}),
 		};
 		const listing = (room) => ({
 			...room.record,

@@ -1,0 +1,6 @@
+# Static assets (Workers Static Assets): the scenes' files and their media.
+# Media rarely changes; files are small enough to recheck sooner.
+/*.jsonl
+  Cache-Control: public, max-age=300
+/*.png
+  Cache-Control: public, max-age=86400

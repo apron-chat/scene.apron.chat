@@ -6,13 +6,11 @@ export const PONG = '{"method":"pong"}';
 export const MAX_FRAME_BYTES = 4096;
 
 /**
- * How many frames a connection may send at once: reading a scene takes `auth` and a few `room_list`s (seven frames
- * from apron-web). The allowance then grows by one every `FRAME_REFILL_SECONDS`, which a client pinging every
- * `server.ping` seconds never runs out of. Past it, the connection is closed: each frame runs this Worker's code, and
- * this bounds what one connection can cost.
+ * How many frames a connection may send: reading a scene takes `auth` and a few `room_list`s (seven frames from
+ * apron-web), and the server asks for no pings. Past it, the connection is closed: each frame runs this Worker's
+ * code, and this bounds the CPU time one connection can use.
  */
 export const MAX_FRAMES = 100;
-export const FRAME_REFILL_SECONDS = 10;
 
 /** Methods that would change something (ARCHIVE.md §4): `denied`. Any other unknown method is `unsupported`. */
 const WRITES = new Set(["me", "message", "command", "reactions", "room_set", "room_join", "room_leave", "status", "push_register", "push_unregister"]);
@@ -23,7 +21,9 @@ const SCHEMES = new Set(["token", "webauthn", "email", "external"]);
 /**
  * Serves a scene on a new WebSocket, from the Worker itself: a connection shares nothing with any other, so it needs
  * no Durable Object. Cloudflare bills the upgrade as one Worker request, and nothing for the frames or for the time
- * the connection stays open; only the CPU time of the handlers below.
+ * the connection stays open; only the CPU time of the handlers below. A connection is left open for as long as the
+ * client keeps it: idle, it costs nothing, and closing it would only make the client reconnect and be sent the scene
+ * again.
  *
  * The `server` frame goes at once. `auth`, which every client sends, is answered with the scene's reader, allowed only
  * to read, and followed by the whole scene (`CompiledScene.pushed`). `room_list` is answered from the scene's replies.
@@ -33,19 +33,18 @@ const SCHEMES = new Set(["token", "webauthn", "email", "external"]);
 export function serve(scene: CompiledScene): Response {
 	const [client, server] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket];
 	server.accept();
-	const opened = Date.now();
 	let frames = 0;
 	let authed = false;
 
 	server.addEventListener("message", ({ data }) => {
 		if (server.readyState !== WebSocket.OPEN) return;
 		if (typeof data !== "string" || data.length > MAX_FRAME_BYTES) return server.close(1009, "Frame too large");
-		if (++frames > MAX_FRAMES + (Date.now() - opened) / (FRAME_REFILL_SECONDS * 1000)) {
+		if (++frames > MAX_FRAMES) {
 			// A reader never gets here; hold off a client that loops, and close (PROTOCOL.md §1.1).
 			server.send(JSON.stringify({ error: { code: -32002, message: "Too many requests for a scene", data: { retry_after: 600 } } }));
 			return server.close(1008, "Too many requests");
 		}
-		// Clients send exactly this (PROTOCOL.md §1).
+		// The server asks for none (no `server.ping`), but answers a client that pings anyway (PROTOCOL.md §1).
 		if (data === '{"method":"ping"}') return server.send(PONG);
 
 		let frame: Json;
