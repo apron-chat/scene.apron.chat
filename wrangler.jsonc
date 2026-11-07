@@ -9,6 +9,9 @@
 	"compatibility_date": "2026-08-15",
 	"workers_dev": false,
 	"preview_urls": true,
+	// Pull request builds run `wrangler preview`, which requires this block. It
+	// is empty because Previews need no settings of their own.
+	"previews": {},
 	"routes": [{ "pattern": "scene.apron.chat", "custom_domain": true }],
 	"build": { "command": "npm run build" },
 	// /<name>.jsonl is the scene's file, served without running the Worker.
