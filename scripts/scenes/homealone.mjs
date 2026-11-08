@@ -65,7 +65,7 @@ s.room("security", { ...quiet, title: "Home Security", description: "671 Lincoln
 s.room("plumbing", { ...quiet, joined: false, title: "Oh-Kay Plumbing & Heating", description: "Licensed. Bonded. We come to you. (While you're out.)" }, ["harry", "marv"]);
 s.room("kickers", { ...quiet, joined: false, title: "Kenosha Kickers", description: "Polka, polka, polka. Weddings, wakes, Rotary dinners." }, ["gus", "ziggy", "stan"]);
 s.room("dm-peter", { ...quiet, private: true }, ["kate", "peter"]);
-s.room("dm-kevin", { ...quiet, private: true }, ["kate", "kevin"]);
+s.room("dm-kevin", { ...quiet, private: true, title: "Kevin & Mom" }, ["kate", "kevin"]);
 s.room("dm-police", { ...quiet, private: true }, ["kate", "balzak"]);
 s.room("dm-airline", { ...quiet, private: true }, ["kate", "agent"]);
 s.room("dm-gus", { ...quiet, private: true }, ["kate", "gus"]);
