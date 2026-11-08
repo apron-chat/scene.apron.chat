@@ -8,10 +8,10 @@ import { describe as summarize, landing } from "../scripts/landing.mjs";
 const path = (url: string) => url.slice(CANONICAL_ORIGIN.length).replace(/\?.*$/, "");
 
 /** Every file served next to the scenes, by its path: what their media URLs may name. */
-const SERVED = new Set(Object.keys(import.meta.glob("../scenes/**/*.{png,jpg}")).map((path) => path.slice("../scenes".length)));
+const SERVED = new Set(Object.keys(import.meta.glob("../scenes/**/*.{png,jpg,mp3}")).map((path) => path.slice("../scenes".length)));
 
 /** Each picture's file, by its path, as a data URL: what its version (`?v=`) hashes. */
-const PICTURES = Object.fromEntries(Object.entries(import.meta.glob<string>("../scenes/**/*.{png,jpg}", { query: "?inline", import: "default", eager: true })).map(([path, data]) => [path.slice("../scenes".length), data]));
+const PICTURES = Object.fromEntries(Object.entries(import.meta.glob<string>("../scenes/**/*.{png,jpg,mp3}", { query: "?inline", import: "default", eager: true })).map(([path, data]) => [path.slice("../scenes".length), data]));
 
 async function version(data: string): Promise<string> {
 	const bytes = Uint8Array.from(atob(data.slice(data.indexOf(",") + 1)), (c) => c.charCodeAt(0));
@@ -59,7 +59,7 @@ describe.each(Object.entries(FILES))("scenes/%s/scene.jsonl", (name, text) => {
 	});
 
 	it("versions each picture on its origin by its file, so clients fetch it again when it changes", async () => {
-		for (const [, url] of text.matchAll(/"(https:\/\/scene\.apron\.chat\/[^"]+\.(?:png|jpg)[^"]*)"/g)) {
+		for (const [, url] of text.matchAll(/"(https:\/\/scene\.apron\.chat\/[^"]+\.(?:png|jpg|mp3)[^"]*)"/g)) {
 			const data = PICTURES[path(url!)];
 			expect(data, `${url} isn't a file in scenes/`).toBeDefined();
 			expect(url, "run npm run scenes").toBe(`${CANONICAL_ORIGIN}${path(url!)}?v=${await version(data!)}`);

@@ -33,6 +33,14 @@ export function image(url, { title, width, height, alt, type = "image/png" }) {
 	return { kind: "upload", title, url, og: { title, image: { url, type, width, height, ...(alt ? { alt } : {}) } } };
 }
 
+/**
+ * An audio embed (PROTOCOL.md §4.8.4): a file at `url`, played from its `og.audio`, as apron-web sends a voice
+ * message it recorded (an upload titled `voice-message.<ext>`). `url` is on the scene's own origin, as for `image()`.
+ */
+export function audio(url, { title, alt, type = "audio/mpeg" }) {
+	return { kind: "upload", title, url, og: { title, audio: { url, type, ...(alt ? { alt } : {}) } } };
+}
+
 export class Script {
 	#at;
 	#users;
@@ -247,7 +255,7 @@ export class Script {
 			...(this.#activity.length ? [{ activity: this.#activity }] : []),
 			...(Object.keys(this.#live).length ? [{ live: this.#live }] : []),
 		];
-		const pictures = /"(https:\/\/scene\.apron\.chat\/[^"?]+\.(?:png|jpe?g|gif|webp))"/g;
+		const pictures = /"(https:\/\/scene\.apron\.chat\/[^"?]+\.(?:png|jpe?g|gif|webp|mp3))"/g;
 		return lines.map((line) => JSON.stringify(line).replace(pictures, (_, url) => JSON.stringify(versioned(url)))).join("\n") + "\n";
 	}
 }
