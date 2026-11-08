@@ -389,7 +389,7 @@ s.say("battleplan", "homealarm", "Armed. Mode: Kevin. Police: on hold until you 
 // A voice message from the van: Kate's voice, with the band faintly behind her, "Fun Polka Song for Dancing" by
 // Nick Panek (Pixabay Content License; Pixabay track 221380). Mixed with ffmpeg: the voice at -16 LUFS, the polka
 // 18 dB under it, low-passed at 3 kHz, faded in and out. Its alt is the script she read.
-const love = s.say("dm-kevin", "kate", "", {
+const love = s.say("dm-kevin", "kate", "I'm on my way!! Don't open the door for anyone", {
 	after: 3000,
 	embeds: [audio(`${MEDIA}/voicenote.mp3`, { title: "voice-message.mp3", alt: "Kate, over a polka band in a van: Kevin, it's Mom. I'm in a van with a polka band. Don't ask. We're in Indiana. Don't open the door for anyone. I'm coming home, sweetheart. I love you." })],
 });
