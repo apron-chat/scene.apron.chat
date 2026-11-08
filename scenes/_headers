@@ -1,7 +1,8 @@
 # Static assets (Workers Static Assets): each scene's file and its media.
 # Media rarely changes; files are small enough to recheck sooner. A scene's
 # file is an Apron archive, whose media type is application/jsonl (apron-web
-# ARCHIVE.md §1).
+# ARCHIVE.md §1). Media may be read by any client's script, not only shown:
+# apron-web fetches a voice message to draw its waveform, which needs CORS.
 /*/scene.jsonl
   Content-Type: application/jsonl; charset=utf-8
   Cache-Control: public, max-age=300
@@ -11,3 +12,4 @@
   Cache-Control: public, max-age=86400
 /*.mp3
   Cache-Control: public, max-age=86400
+  Access-Control-Allow-Origin: *
