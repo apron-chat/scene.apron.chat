@@ -150,6 +150,15 @@ export class Script {
 	}
 
 	/**
+	 * `user_id` has read none of `room_id`: a read cursor at the room's start, its record's log_id, before any message.
+	 * For `you`, everything in the room from others shows as unread on a reader's first visit (apron-web counts what was
+	 * there before the page only after a read position, and takes your own newest message as read).
+	 */
+	unread(room_id, user_id) {
+		this.#activity.push({ room_id, from: this.#from(user_id), read_message_id: this.#room(room_id).start });
+	}
+
+	/**
 	 * Live text (scene extension `live`): `chunks` of `[milliseconds to wait, text]`, served at `/<name>/live/<id>` as
 	 * a writer would have sent them. A `terminal` or `append` embed whose `url` is there shows them as they come, and
 	 * stays live.

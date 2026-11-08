@@ -313,7 +313,7 @@ s.say("dm-peter", "kate", "Peter, a burglar just posted in Neighborhood Watch an
 s.say("dm-peter", "peter", "Officer Harry handled it. Nice guy.", { after: 300 });
 
 s.at(ct("2025-12-22 18:30"));
-const party = s.say("security", "homealarm", "Living room: occupancy **9**. Music: on. One guest (tall, 6'6\") walking past the window every 30 seconds.", { after: 0 });
+s.say("security", "homealarm", "Living room: occupancy **9**. Music: on. One guest (tall, 6'6\") walking past the window every 30 seconds.", { after: 0 });
 s.say("plumbing", "marv", "They're home, Harry. They're having a party.", { after: 120 });
 s.say("plumbing", "harry", "The tall guy walks past the window every thirty seconds.", { after: 60 });
 s.say("plumbing", "marv", "Popular guy.", { after: 10 });
@@ -436,11 +436,9 @@ s.say("dm-gus", "kate", "Gus. Drive faster.", { after: 0 });
 s.say("dm-gus", "gus", "Ma'am, it's a polka van.", { after: 20 });
 // Kevin has read every one of Mom's messages. He has answered none.
 s.read("dm-kevin", "kevin", love);
-// Kate has read everything, in the van, but what came today from the house: Kevin's battle plan, and the alarm in
-// Home Security and the family room. They're unread.
-for (const room of ["watch", "marley", "choir", "pizza", "headcount", "dm-peter", "dm-kevin", "dm-police", "dm-airline", "dm-gus"]) s.read(room, "kate");
-s.read("security", "kate", party);
-s.read("family", "kate", champagne);
+// Kate has read none of it: a reader's first visit starts with every room unread, and reads its way in. (Where Kate
+// posted, apron-web counts only what came after her own last message.)
+for (const room of ["family", "pizza", "headcount", "watch", "marley", "choir", "security", "battleplan", "dm-peter", "dm-kevin", "dm-police", "dm-airline", "dm-gus"]) s.unread(room, "kate");
 s.typing("family", "kevin");
 s.typing("dm-gus", "gus");
 
