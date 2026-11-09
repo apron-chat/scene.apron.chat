@@ -151,6 +151,11 @@ describe("the landing page", () => {
 		expect(page).toContain('<span class="avatar mono" aria-hidden="true">TC</span>');
 	});
 
+	it("shows the scenes with their own picture first, whosonfirst last of those, then the rest", () => {
+		const order = [...page.matchAll(/<article class="scene" id="([^"]+)">/g)].map((match) => match[1]);
+		expect(order).toEqual(["homealone", "itcrowd", "piper", "whosonfirst", "agent", "rich", "team"]);
+	});
+
 	it("says what each scene shows", () => {
 		expect(summarize(FILES.agent!)).toMatchObject({ counts: { rooms: 3, threads: 1, DMs: 0, people: 4 } });
 		expect(summarize(FILES.agent!).features).toEqual(expect.arrayContaining(["threads", "terminal", "live text", "presence", "badges"]));

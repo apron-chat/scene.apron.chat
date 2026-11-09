@@ -103,12 +103,27 @@ ${avatar ? `<img class="avatar" src="${escape(avatar)}" width="56" height="56" a
 </article>`;
 }
 
+/** Scenes shown last among those with their own picture: whosonfirst, the first scene, closes that set. */
+const LAST_PICTURED = ["whosonfirst"];
+
 /**
- * The page, for `scenes`: [name, file text] in the order to show them. Everything on a card comes from its scene's
- * file. `version`, given a served path such as `/piper/scene.png`, names that file's contents (the build hashes it).
+ * Where a card goes: scenes with their own picture (the header's `avatar`) first, whosonfirst last of those, then the
+ * rest. Within each, the order the scenes came in.
+ */
+const rank = (name, scene) => (scene.avatar ? (LAST_PICTURED.includes(name) ? 1 : 0) : 2);
+
+/**
+ * The page, for `scenes`: [name, file text], in name order. Everything on a card comes from its scene's file; the cards
+ * are ordered by `rank`. `version`, given a served path such as `/piper/scene.png`, names that file's contents (the
+ * build hashes it).
  */
 export function landing(scenes, { version } = {}) {
-	const cards = scenes.map(([name, text]) => card(name, describe(text), version)).join("\n");
+	// A stable sort: within a rank, the order the scenes came in.
+	const cards = scenes
+		.map(([name, text]) => [name, describe(text)])
+		.sort(([a, sa], [b, sb]) => rank(a, sa) - rank(b, sb))
+		.map(([name, scene]) => card(name, scene, version))
+		.join("\n");
 	return `<!doctype html>
 <html lang="en">
 <head>
