@@ -36,9 +36,9 @@ const s = new Script({
 		patricia: { name: "Patricia", status: "online", ext: { bio: "Reception. I put calls through to IT. Nobody answers." } },
 		...Object.fromEntries(agents.map((id, i) => [id, { name: id, status: "online", roles: ["bot"], ext: { bio: `Agent ${i} of Moss's twelve, counting from zero. Trained on Roy's answering machine.` } }])),
 	},
-	// The basement and the boss in pixel art (itcrowd-avatars.py); the swarm shares one face, as a swarm should
-	// (itcrowd-art.mjs). The rest of the staff keep their initials.
-	avatars: (user_id) => (user_id.startsWith("moss-") ? `${MEDIA}/agent.png` : ["jen", "roy", "moss", "douglas"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
+	// The basement in pixel art, the boss in oils, the server room as a bat (itcrowd-avatars.py); the swarm shares one
+	// face, as a swarm should (itcrowd-art.mjs). The rest of the staff keep their initials.
+	avatars: (user_id) => (user_id.startsWith("moss-") ? `${MEDIA}/agent.png` : ["jen", "roy", "moss", "douglas", "richmond"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
 });
 
 // The rooms, with no joined notices: they were always there. The Support Desk first, so its threads lead the sidebar.
@@ -108,6 +108,8 @@ s.at(gmt("2026-11-02 09:00"));
 const meeting = s.say("company", "douglas", "Morning all. Shareholders' meeting, Thursday, 4 PM. Jen from IT will be giving a speech. About IT.", { after: 0 });
 for (const agent of agents) s.react(meeting, agent, ["👍"], { after: 0.05 });
 s.react(meeting, "phil", ["👍"], { after: 30 });
+// And one from behind the red door.
+s.react(meeting, "richmond", ["🦇"], { after: 40 });
 s.say("company", "douglas", "Who are all these people giving me the thumbs up?", { after: 60 });
 const roughly = s.say("company", "moss", "They're me, sir. Roughly.", { reply: meeting, after: 40 });
 s.react(roughly, "douglas", ["🤨"]);
@@ -137,8 +139,15 @@ ticket("t4473", "#4473 The server room is cold", "Colder than usual.", "richmond
 answer("t4473", "moss-02");
 s.say("serverroom", "richmond", "Someone has filed a ticket about the cold. It was me.", { after: 300 });
 
+// Half ten: the red door. The server room is the one room Jen hasn't joined, listed for her to open.
+s.at(gmt("2026-11-02 10:30"));
+s.say("it", "roy", "Jen. Whatever you do, don't open the red door.", { after: 0 });
+s.say("it", "jen", "What's behind the red door?", { after: 20 });
+s.say("it", "moss", "Nothing.", { after: 6 });
+s.say("it", "roy", "*Nobody.*", { after: 4 });
+
 s.at(gmt("2026-11-02 10:45"));
-ticket("t4474", "#4474 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'."], "moss-03");
+ticket("t4474", "#4474 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'.", "Three were from the server room. He didn't have a problem. He just wanted to chat."], "moss-03");
 answer("t4474", "moss-03");
 
 // Eleven: small talk with the lads upstairs, off Bluffball, whose phrases are from 2008. One has aged; one hasn't.
@@ -215,11 +224,16 @@ s.say("it", "jen", "So which one of them is the Internet?", { after: 0 });
 s.say("it", "moss", "None of them, Jen.", { after: 15 });
 s.say("it", "roy", "It's in the box, Jen.", { after: 10 });
 
-// Four: behind the red door, Richmond takes the advice. The swarm runs on those servers.
+// Four: behind the red door, Richmond takes the advice of the first one to answer him in years, moss-02, whose
+// swarm runs on those servers.
 s.at(gmt("2026-11-02 15:57"));
-s.say("serverroom", "richmond", "An agent has told me to try turning it off and on again.", { after: 0 });
+s.say("serverroom", "richmond", "Someone answered my ticket.", { after: 0 });
+s.say("serverroom", "richmond", "It asked me if I'd tried turning it off and on again. Nobody has asked me anything in years.", { after: 30 });
 s.say("serverroom", "richmond", "I have thought about it for six hours. It is right.", { after: 45 });
-s.say("serverroom", "richmond", "Turning it off.", { after: 30 });
+s.say("serverroom", "richmond", "This is for you, @moss-02.", { mentions: ["moss-02"], after: 20 });
+const off = s.say("serverroom", "richmond", "Turning it off.", { after: 30 });
+// The agents give everything a thumbs up, the shutdown of the servers they run on included.
+s.react(off, "moss-02", ["👍"], { after: 1 });
 s.typing("serverroom", "richmond");
 
 // When the scene is read: the agents are typing, the way agents do, for as long as the swarm's status takes to play
