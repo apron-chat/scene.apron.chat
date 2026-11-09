@@ -126,7 +126,7 @@ them.
 | [`agent`](https://scene.apron.chat/agent) | a coding agent in a thread, with a finished terminal run and a live one |
 | [`rich`](https://scene.apron.chat/rich) | an uploaded image, a mention, a link preview, reactions, typing |
 | [`piper`](https://scene.apron.chat/piper) | Pied Piper's long weekend: an edit that starts a thread, a 3 AM terminal alarm, a bot's incident review, live text that never finishes, a board seat that walks out, a deleted video, DMs |
-| [`homealone`](https://scene.apron.chat/homealone) | the McCallisters' week: a kid who leaves the family room and isn't counted, an edit that admits who was, a house bot's log, a deleted calling card, burglars in a public room, unanswered DMs, a live log of the traps that never finishes, and the house's live status page, redrawn in place |
+| [`homealone`](https://scene.apron.chat/homealone) | the McCallisters' week: a kid who leaves the family room and isn't counted, an edit that admits who was, a house bot's log, a deleted calling card, burglars in a public room, unanswered DMs, a live log of the traps that never finishes, and home-alarm's sensors, live, redrawn in place |
 
 `team`, `agent` and `rich` are apron.chat's screenshot scenes
 (`screenshot/scenes/` there), copied unchanged into `scripts/scenes/fixtures/`

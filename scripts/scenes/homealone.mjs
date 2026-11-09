@@ -7,7 +7,7 @@
 // and isn't in it to be counted, an edit that admits who was, a bot that logs
 // the house, a deleted calling card, a public room two burglars think is
 // private, a live log of the traps that never finishes (and, in the family room,
-// the same night as the house's status page), and DMs nobody answers.
+// the same night as home-alarm's sensors see it), and DMs nobody answers.
 //
 //   node scripts/scenes/homealone.mjs
 import { writeFileSync } from "node:fs";
@@ -408,7 +408,7 @@ s.say("plumbing", "harry", "Nine o'clock. I'll take the front. You take the base
 s.say("plumbing", "marv", "Should I leave the water running?", { after: 8 });
 const alarm = s.say("security", "homealarm", "🚨 **Alarm**: front door, back door, basement. Live log:", { after: 40, embeds: [{ kind: "terminal", title: "home-alarm events", url: `${MEDIA}/live/christmas-eve` }] });
 s.react(alarm, "kevin", ["😈"]);
-const mirror = s.say("family", "homealarm", "🚨 **Alarm** at the house. Full log in Home Security.", { after: 2, embeds: [{ kind: "terminal", title: "home-alarm status", url: `${MEDIA}/live/christmas-eve-status` }] });
+const mirror = s.say("family", "homealarm", "🚨 **Alarm** at the house. Kevin says not to worry.", { after: 2, embeds: [{ kind: "terminal", title: "home-alarm status", url: `${MEDIA}/live/christmas-eve-status` }] });
 s.react(mirror, "buzz", ["🍿"]);
 s.react(mirror, "kate", ["😱"]);
 s.live("christmas-eve", [
@@ -431,14 +431,16 @@ s.live("christmas-eve", [
 	[1200, `${event("21:09:12", "next door", "motion", "2 adults, 1 small human, ")}`],
 	[1500, "1 snow sh"],
 ]);
-// The family room's copy is the same night as the house's status page, redrawn in place rather than appended: a bar
-// of history for each part of the house (an evening of green, then the traps), the latest incident, and, along the
-// bottom, what's on the living-room TV, which plays Kevin's gangster film to the end. home-alarm doesn't know who
-// broke in, so they are visitors: operational when they arrive. Kevin's row never changes: Buzz's word for it. The
-// last frame breaks off in its incident line, so everything else keeps the frame before.
-const OK = 0, DEGRADED = 1, OUTAGE = 2, NONE = -1;
-const shade = { [NONE]: (text) => `${ESC}[90m${text}${ESC}[39m`, [OK]: green, [DEGRADED]: yellow, [OUTAGE]: red };
-const parts = [["doors", "doors"], ["basement", "basement"], ["inside", "ground floor"], ["visitors", "visitors (2)"], ["kevin", "Kevin"]];
+// The family room's copy is the same night as home-alarm sees it, sensor by sensor, redrawn in place rather than
+// appended: a bar of history for each (an evening of green, then the traps), what each reports in its own narrow terms
+// (the smoke detector smells a hat; the thermostat minds the doors), the latest event, and, along the bottom, the
+// living-room TV, playing Kevin's gangster film to the end. It doesn't know who broke in: they're adults, or a chicken.
+// It promised Kevin not to call the police until he says (in Battle plan), and counts every time it wanted to. Its
+// last frame is Kevin caught next door: it calls anyway, then breaks off mid-line, so Kevin's row keeps the frame
+// before: fine.
+const OK = 0, WARN = 1, BAD = 2;
+const shade = { [OK]: green, [WARN]: yellow, [BAD]: red };
+const sensors = ["doorbell", "front door", "smoke", "thermostat", "motion", "police", "Kevin"];
 const subtitles = {
 	start: "Who is it?",
 	"21:00:58": "Leave it on the doorstep and get the hell outta here.",
@@ -449,53 +451,66 @@ const subtitles = {
 	"21:07:40": "Keep the change, ya filthy animal.",
 };
 const night = [
-	// [time, the incident, how parts of the house now stand: [level, detail]], and the summary, when it changes.
-	["21:00:41", "front door: knob at 400°F → visitor: AAAAAH", { doors: [DEGRADED, "knob 400°F"], visitors: [DEGRADED, "1 injury"] }, [DEGRADED, "Degraded performance"]],
-	["21:00:58", "basement: steps iced → visitor down", { basement: [DEGRADED, "ice"], visitors: [DEGRADED, "2 injuries"] }],
-	["21:01:20", "doggy door: BB gun → visitor: AAAAAH", { doors: [DEGRADED, "knob 400°F, BB"], visitors: [DEGRADED, "3 injuries"] }],
-	["21:02:07", "laundry chute: iron → visitor's face", { basement: [DEGRADED, "ice, iron"], visitors: [DEGRADED, "4 injuries"] }],
-	["21:02:40", "back door: blowtorch → visitor's hat on fire", { doors: [OUTAGE, "knob 400°F, BB, blowtorch"], visitors: [OUTAGE, "partial outage · 5 injuries"] }, [OUTAGE, "Partial outage"]],
-	["21:03:15", "basement stairs: tar → visitor's shoes", { basement: [OUTAGE, "ice, iron, tar"], visitors: [OUTAGE, "partial outage · 6 injuries"] }],
-	["21:03:31", "basement stairs: nail → visitor: AAAAAAAAAAAH", { basement: [OUTAGE, "ice, iron, tar, nail"], visitors: [OUTAGE, "partial outage · 7 injuries"] }],
-	["21:04:02", "kitchen window: ornaments → visitor barefoot", { inside: [DEGRADED, "glass"], visitors: [OUTAGE, "partial outage · 8 injuries"] }],
-	["21:04:30", "front hall: fan, feathers → visitor feathered", { inside: [DEGRADED, "glass, feathers"], visitors: [OUTAGE, "partial outage · 9 injuries"] }],
-	["21:05:11", "stairs: paint cans → both visitors", { inside: [OUTAGE, "glass, feathers, paint"], visitors: [OUTAGE, "partial outage · 11 injuries"] }],
-	["21:05:50", "dining room: Axl → visitor: AAAAAAAAAAAAAAAAH", { inside: [OUTAGE, "glass, feathers, paint, Axl"], visitors: [OUTAGE, "partial outage · 12 injuries"] }],
-	["21:05:52", "dining room: crowbar, visitor → visitor", { visitors: [OUTAGE, "partial outage · 13 injuries"] }],
-	["21:06:30", "hall: Micro Machines → visitor down", { inside: [OUTAGE, "glass, feathers, paint, Axl, toys"], visitors: [OUTAGE, "partial outage · 14 injuries"] }],
-	["21:07:40", "zip line: rope cut → both visitors down", { visitors: [OUTAGE, "major outage · 16 injuries"] }, [OUTAGE, "Major outage"]],
+	// [time, what happened, and what the sensors now report: [level, text]].
+	["21:00:41", "front door: knob at 400°F · adult: AAAAAH", { "front door": [BAD, "knob 400°F (Kevin's setting)"] }],
+	["21:00:58", "basement steps: ice · adult: down", { thermostat: [WARN, "67°F · basement door open"], motion: [WARN, "1 small human, 2 adults"] }],
+	["21:01:20", "doggy door: BB · adult: AAAAAH", {}],
+	["21:02:07", "laundry chute: iron · adult: face", {}],
+	["21:02:40", "back door: blowtorch · adult: hat on fire", { smoke: [BAD, "detected: 1 hat"], thermostat: [WARN, "66°F · back door open"] }],
+	["21:03:15", "basement stairs: tar · adult: shoes off", {}],
+	["21:03:31", "basement stairs: nail · adult: AAAAAAAAAAAH", {}],
+	["21:04:02", "kitchen window: ornaments · adult: barefoot", { thermostat: [WARN, "65°F · kitchen window open"] }],
+	["21:04:30", "front hall: fan, feathers · adult: feathered", { motion: [BAD, "1 small human, 1 adult, 1 chicken (?)"] }],
+	["21:05:11", "stairs: paint cans · 2 adults: face", {}],
+	["21:05:50", "dining room: Axl · adult: AAAAAAAAAAAAAAAAH", { motion: [BAD, "1 small human, 1 adult, 1 chicken (?), 1 spider"] }],
+	["21:05:52", "dining room: crowbar · adult → adult", {}],
+	["21:06:30", "hall: Micro Machines · adult: down", {}],
+	["21:07:40", "zip line: rope cut · 2 adults: down", { thermostat: [WARN, "63°F · please close the back door"], motion: [BAD, "1 spider · yard: 1 adult, 1 chicken (?)"] }],
 ];
-const CELLS = 24;
+const CELLS = 16;
 const home = `${ESC}[H`;
 const row = (n) => `${ESC}[${n};1H${ESC}[2K`;
 const italic = (text) => `${ESC}[3m${text}${ESC}[23m`;
-const state = { doors: [OK, "operational"], basement: [OK, "operational"], inside: [OK, "operational"], visitors: [OK, "operational"], kevin: [OK, "operational · 100.00% uptime"] };
-// An evening of history: the house green all along, the visitors not there yet.
-const history = Object.fromEntries(parts.map(([key]) => [key, Array(CELLS).fill(key === "visitors" ? NONE : OK)]));
-history.visitors[CELLS - 1] = OK;
-const top = (summary) => `${row(1)}  671 Lincoln Blvd status${" ".repeat(24)}${dim("mode: Kevin · police: on hold")}${row(2)}  ${shade[summary[0]]("●")} ${summary[1]}`;
-// Each part's detail, its status (operational, partial or major outage) in its color.
-const detail = ([level, text]) => text.replace(/^(operational|partial outage|major outage)/, (word) => shade[level](word));
-const board = () => parts.map(([key, label], i) => `${row(4 + i)}  ${dim(label.padEnd(14))}${history[key].map((level) => shade[level]("▐")).join("")}   ${detail(state[key])}`).join("");
-const incident = (time, text) => `${row(10)}  ${dim(time)}  ${text}`;
-const tv = (line) => `${row(12)}  ${dim("─".repeat(76))}${row(13)}  TV ▶ Angels with Filthy Souls${" ".repeat(26)}${dim("living room · vol 100")}${row(14)}     ${italic(line)}`;
+const state = {
+	doorbell: [WARN, "2 unfamiliar faces · didn't ring"],
+	"front door": [OK, "locked"],
+	smoke: [OK, "clear"],
+	thermostat: [OK, "68°F"],
+	motion: [OK, "1 small human"],
+	police: [OK, "on hold (Kevin said)"],
+	Kevin: [OK, "fine"],
+};
+// An evening of history, all green, then where each stands at nine.
+const history = Object.fromEntries(sensors.map((name) => [name, [...Array(CELLS - 1).fill(OK), state[name][0]]]));
+const top = () => `${row(1)}  home-alarm · 671 Lincoln Blvd${" ".repeat(36)}${dim("mode: Kevin")}${row(2)}  ${green("●")} Everything is fine. Kevin says.`;
+const board = () => sensors.map((name, i) => `${row(4 + i)}  ${dim(name.padEnd(12))}${history[name].map((level) => shade[level]("▐")).join("")}  ${state[name][1]}`).join("");
+const latest = (time, text) => `${row(12)}  ${dim(time)}  ${text}`;
+const tv = (line) => `${row(13)}  ${dim("─".repeat(76))}${row(14)}  TV ▶ Angels with Filthy Souls${" ".repeat(26)}${dim("living room · vol 100")}${row(15)}     ${italic(line)}`;
 /** Seconds since nine o'clock, of a time such as "21:03:31". */
 const since9 = (time) => time.split(":").map(Number).reduce((total, part, i) => total + part * [3600, 60, 1][i], 0) - 21 * 3600;
 /** A wait of 2 to 4 seconds between updates, longer the longer the night took between them (a minute or more: 4). */
 const pace = (from, to) => Math.round(20 + (Math.min(since9(to) - since9(from), 60) / 60) * 20) * 100;
-let summary = [OK, "All systems operational"];
+/** Moves every sensor's history on by one, to where it stands now. */
+const tick = () => {
+	for (const name of sensors) history[name] = [...history[name].slice(1), state[name][0]];
+};
 let subtitle = subtitles.start;
-const status = [[400, `${ESC}[2J${home}${top(summary)}${board()}${incident("21:00:00", dim("2 visitors at the doors"))}${tv(subtitle)}`]];
+const status = [[400, `${ESC}[2J${home}${top()}${board()}${latest("21:00:00", dim("2 adults at the doors"))}${tv(subtitle)}`]];
 let then = "21:00:00";
-for (const [time, text, now, next] of night) {
+let urges = 0;
+for (const [time, text, now] of night) {
 	Object.assign(state, now);
-	if (next) summary = next;
+	urges++;
+	state.police = [urges < 5 ? WARN : BAD, `wanted to call: ${urges} · allowed: 0`];
 	subtitle = subtitles[time] ?? subtitle;
-	for (const [key] of parts) history[key] = [...history[key].slice(1), state[key][0]];
-	status.push([pace(then, time), `${home}${top(summary)}${board()}${incident(time, text)}${tv(subtitle)}`]);
+	tick();
+	status.push([pace(then, time), `${home}${top()}${board()}${latest(time, text)}${tv(subtitle)}`]);
 	then = time;
 }
-status.push([pace(then, "21:09:12"), `${home}${top(summary)}${board()}${incident("21:09:12", "next door: motion → 2 visitors, 1 small human, ")}`], [2500, "1 snow sh"]);
+// Kevin, caught next door. It calls anyway.
+state.police = [BAD, `wanted to call: ${urges + 1} · calling anyway`];
+tick();
+status.push([pace(then, "21:09:12"), `${home}${top()}${board()}${latest("21:09:12", "next door: 2 adults, 1 small human, ")}`], [2500, "1 snow sh"]);
 s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
