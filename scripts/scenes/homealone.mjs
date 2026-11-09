@@ -220,13 +220,9 @@ s.say("headcount", "buzz", "In fairness, Kevin wasn't in the chat. You can't cou
 
 s.at(ct("2025-12-20 11:00"));
 s.say("dm-kevin", "kate", "Kevin, it's Mom. Are you okay? We're on the plane. Answer me.", { after: 0 });
-const junk = s.say("family", "kevin", "I'm eating junk and watching rubbish!", {
-	after: 300,
-	// Photo by Toa Heftiba on Unsplash (Unsplash License): https://unsplash.com/photos/qmgqtK4xIQs
-	embeds: [image(`${MEDIA}/dinner.jpg`, { title: "dinner.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "A milkshake with an upside-down ice cream cone and marshmallows on top, and a striped bag of caramel popcorn" })],
-});
-s.say("family", "kevin", "You'd better come out and stop me!", { after: 20 });
-s.react(junk, "buzz", ["🍿"]);
+// He answers Mom, but not where she asked.
+const busy = s.say("family", "kevin", "Can't talk. Busy.", { reply: kevin, after: 300 });
+s.react(busy, "buzz", ["🍿"]);
 s.say("dm-kevin", "kate", "Kevin. Mom. Please look at your messages.", { after: 900 });
 
 // Paris, and the police in Illinois. The flight lands about five in the afternoon, Chicago time: midnight in Paris.
