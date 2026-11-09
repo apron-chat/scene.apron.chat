@@ -133,7 +133,7 @@ them.
 unchanged into `scripts/scenes/fixtures/` and converted by
 `scripts/scenes/fixtures.mjs`. apron.chat's landing page now takes its
 screenshots from the scenes here (its `screenshot/capture.mjs`): `piper` for
-Team chat and the link preview, `agent` for Coding agents, and `homealone`
+Team chat and the link preview, `itcrowd` for Support desk, and `homealone`
 for Family chat. `piper` began as the fourth fixture,
 and grew into its own script, `scripts/scenes/piper.mjs`, whose last
 afternoon is still that fixture's. It's a parody of HBO's *Silicon Valley*;
