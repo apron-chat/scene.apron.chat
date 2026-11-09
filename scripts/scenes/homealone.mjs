@@ -198,7 +198,7 @@ s.say("family", "fuller", "Is the Pepsi free on the plane?", { after: 30 });
 
 // Kevin wakes up in an empty house.
 s.at(ct("2025-12-20 09:40"));
-s.say("security", "homealarm", "Motion: upstairs (third floor). 1 small human. Everyone else: gone since 08:01.", { after: 0 });
+s.say("security", "homealarm", "Motion: upstairs (third floor). 1 small human. Everyone else: gone since 08:01. Garage: open.", { after: 0 });
 s.join("family", "kevin", 300);
 s.say("family", "kevin", "Mom? Dad?", { after: 10 });
 s.say("family", "kevin", "Buzz?? I'm going in your room", { after: 120 });
@@ -291,9 +291,12 @@ s.react(view, "peter", ["😬"]);
 const wonderful = s.say("family", "frank", "Rob's TV gets one channel and it's *It's a Wonderful Life* dubbed in French.", { after: 300 });
 s.react(wonderful, "linnie", ["🇫🇷"]);
 s.react(wonderful, "megan", ["😭"]);
+const wet = s.say("family", "frank", "Fuller had every free Pepsi on the plane. He wet Rob's guest bed. Rob's paying for that too.", { after: 200 });
+s.react(wet, "kevin", ["😎"]);
 
 s.at(ct("2025-12-21 11:30"));
-s.say("family", "kevin", "Did the grocery shopping. By myself.\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [x] a blowtorch\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association\n\nTotal: **$58.17**", { after: 0 });
+const shopping = s.say("family", "kevin", "Did the grocery shopping. By myself.\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [x] a blowtorch\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association\n\nTotal: **$58.17**", { after: 0 });
+s.react(shopping, "megan", ["😶"]);
 s.say("family", "buzz", "With WHAT money", { after: 60 });
 s.say("family", "kevin", "Yours. It was under your bed.", { after: 20 });
 s.say("family", "buzz", "KEVIN. That's my savings. And don't you dare touch Axl.", { after: 10 });
@@ -302,6 +305,8 @@ s.say("dm-kevin", "kate", "Kevin, don't open the door to anyone. I'm coming home
 s.at(ct("2025-12-21 13:05"));
 s.say("plumbing", "marv", "Harry, that kid at the light on Main was staring at us.", { after: 0 });
 s.say("plumbing", "harry", "Kids stare. It's what they do. Drive.", { after: 20 });
+const van = s.say("watch", "kevin", "The policeman with the gold tooth just drove past me in a plumbing van. It says Oh, K.", { after: 40 });
+s.react(van, "buzz", ["🙄"]);
 
 // Monday the 22nd: Marv's calling card, and a party.
 s.at(ct("2025-12-22 10:15"));
