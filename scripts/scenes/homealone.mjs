@@ -6,7 +6,8 @@
 // at nine. What a chat adds: a kid who leaves the family room the night before
 // and isn't in it to be counted, an edit that admits who was, a bot that logs
 // the house, a deleted calling card, a public room two burglars think is
-// private, a live log of the traps that never finishes, and DMs nobody answers.
+// private, a live log of the traps that never finishes (and, in the family room,
+// the same night as one screen redrawn in place), and DMs nobody answers.
 //
 //   node scripts/scenes/homealone.mjs
 import { writeFileSync } from "node:fs";
@@ -406,7 +407,7 @@ s.say("plumbing", "harry", "Nine o'clock. I'll take the front. You take the base
 s.say("plumbing", "marv", "Should I leave the water running?", { after: 8 });
 const alarm = s.say("security", "homealarm", "🚨 **Alarm**: front door, back door, basement. Live log:", { after: 40, embeds: [{ kind: "terminal", title: "home-alarm events", url: `${MEDIA}/live/christmas-eve` }] });
 s.react(alarm, "kevin", ["😈"]);
-const mirror = s.say("family", "homealarm", "🚨 **Alarm** at the house: front door, back door, basement. Live log in Home Security.", { after: 2, embeds: [{ kind: "terminal", title: "home-alarm events", url: `${MEDIA}/live/christmas-eve` }] });
+const mirror = s.say("family", "homealarm", "🚨 **Alarm** at the house. Full log in Home Security.", { after: 2, embeds: [{ kind: "terminal", title: "home-alarm status", url: `${MEDIA}/live/christmas-eve-status` }] });
 s.react(mirror, "buzz", ["🍿"]);
 s.react(mirror, "kate", ["😱"]);
 s.live("christmas-eve", [
@@ -429,6 +430,47 @@ s.live("christmas-eve", [
 	[1200, `${event("21:09:12", "next door", "motion", "2 adults, 1 small human, ")}`],
 	[1500, "1 snow sh"],
 ]);
+// The family room's copy is the same night on one screen, redrawn in place rather than appended: the newest trap,
+// flashed then settled, a bar of traps sprung, the burglars' tally, and a last row that never changes, Buzz's word for
+// it. Its last frame breaks off mid-line, so the rows under it keep the frame before: Kevin, still fine.
+const traps = [
+	// [time, where, what, who's hit, what they say], and whether it's one of Kevin's traps.
+	["21:00:41", "front door", "knob: 400°F", ["harry"], red("AAAAAH")],
+	["21:00:58", "basement", "steps: ice", ["marv"], "down"],
+	["21:01:20", "doggy door", "BB gun", ["marv"], red("AAAAAH")],
+	["21:02:07", "laundry chute", "iron", ["marv"], "face"],
+	["21:02:40", "back door", "blowtorch", ["harry"], yellow("hat on fire")],
+	["21:03:15", "basement", "stairs: tar", ["marv"], "shoes lost"],
+	["21:03:31", "basement", "stairs: nail", ["harry"], red("AAAAAAAAAAAH")],
+	["21:04:02", "kitchen", "window: ornaments", ["marv"], "barefoot"],
+	["21:04:30", "front hall", "fan: feathers", ["harry"], "chicken"],
+	["21:05:11", "stairs", "paint can ×2", ["harry", "marv"], "face"],
+	["21:05:50", "dining room", "Axl (tarantula)", ["marv"], red("AAAAAAAAAAAAAAAAH")],
+	["21:05:52", "dining room", "crowbar (Harry)", ["marv"], dim("not a trap"), false],
+	["21:06:30", "hall", "Micro Machines", ["marv"], "down"],
+	["21:07:40", "zip line", "rope: cut", ["harry", "marv"], "down"],
+];
+const total = traps.filter(([, , , , , trap = true]) => trap).length;
+const home = `${ESC}[H`;
+const row = (n) => `${ESC}[${n};1H${ESC}[2K`;
+const inverse = (text) => `${ESC}[7m${text}${ESC}[27m`;
+const header = (time) => ` ${dim("home-alarm · 671 Lincoln Blvd · mode: Kevin · police: on hold")}       ${time}`;
+const newest = (where, what, who) => `${where.padEnd(14)}${what.padEnd(20)}${who}`;
+const bar = (sprung) => `  ${dim("traps")}     ${"██".repeat(sprung)}${dim("░░".repeat(total - sprung))}  ${sprung}/${total}`;
+const tally = (hits) => `  ${dim("burglars")}  Harry ${hits.harry} · Marv ${hits.marv}`;
+const status = [[400, `${ESC}[2J${home}${header("21:00:00")}${row(3)}  ${dim("armed, waiting")}${row(5)}${bar(0)}${row(6)}${tally({ harry: 0, marv: 0 })}${row(7)}  ${dim("Kevin")}     fine`]];
+const hits = { harry: 0, marv: 0 };
+let sprung = 0;
+for (const [time, where, what, who, says, trap = true] of traps) {
+	if (trap) sprung++;
+	for (const name of who) hits[name]++;
+	const line = newest(where, what, `${who.map((name) => (name === "harry" ? "Harry" : "Marv")).join(" + ")}: ${says}`);
+	// Drawn whole, the newest flashed; then, a moment later, settled.
+	status.push([time === "21:05:52" ? 500 : 750, `${home}${row(1)}${header(time)}${row(3)}  ${inverse(line.replace(/\x1b\[[\d;]*m/g, ""))}${row(5)}${bar(sprung)}${row(6)}${tally(hits)}`]);
+	status.push([150, `${row(3)}  ${line}`]);
+}
+status.push([1200, `${home}${row(1)}${header("21:09:12")}${row(3)}  ${newest("next door", "motion", "2 adults, 1 small human, ")}`], [1500, "1 snow sh"]);
+s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
 s.at(ct("2025-12-24 21:08"));
