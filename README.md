@@ -154,8 +154,10 @@ and the polka behind its voice message is from Pixabay
 `itcrowd` (`scripts/scenes/itcrowd.mjs`) is a parody of Channel 4's *The IT
 Crowd*: Moss automates Roy with twelve agents, `moss-00` to `moss-11`, on the
 Support Desk. `scripts/scenes/itcrowd-art.mjs` draws its pictures: the
-swarm's one avatar, the scene's image, and the Internet. Its people keep
-initials.
+swarm's one avatar, the scene's image, and the Internet.
+`scripts/scenes/itcrowd-avatars.py` cuts Jen, Roy, Moss and Douglas from
+`itcrowd-avatars.webp`, a grid of them in pixel art; the rest of the staff
+keep initials.
 
 ### Adding a scene
 
