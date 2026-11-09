@@ -229,34 +229,24 @@ s.say("family", "kevin", "You'd better come out and stop me!", { after: 20 });
 s.react(junk, "buzz", ["🍿"]);
 s.say("dm-kevin", "kate", "Kevin. Mom. Please look at your messages.", { after: 900 });
 
-// Paris, and the police in Illinois.
-s.at(ct("2025-12-20 13:30"));
+// Paris, and the police in Illinois. The flight lands about five in the afternoon, Chicago time: midnight in Paris.
+s.at(ct("2025-12-20 17:40"));
 s.say("dm-police", "kate", "Hello, I'm calling from Paris, France. My son is home alone at 671 Lincoln Boulevard, Winnetka. He's eight.", { after: 0 });
 s.say("dm-police", "balzak", "Ma'am, you want the Family Affairs desk. I'll transfer you.", { after: 240 });
 s.say("dm-police", "kate", "I was transferred FROM the Family Affairs desk.", { after: 30 });
 s.say("dm-police", "balzak", "...Hold, please.", { after: 600 });
 s.say("dm-police", "balzak", "Okay. I sent a car.", { after: 1800 });
 
-s.at(ct("2025-12-20 14:41"));
+s.at(ct("2025-12-20 18:51"));
 s.say("security", "homealarm", "Front door: knock (Winnetka PD). Upstairs: motion → master bedroom → **under the bed**. Front door: knock. Visitor: left.", { after: 0 });
 s.say("dm-police", "balzak", "Officer knocked. Nobody answered. House looks fine, lights on timers. I'd say everything's okay.", { after: 600 });
 s.say("dm-police", "kate", "He's EIGHT. He's hiding under the bed.", { after: 30 });
 s.say("dm-police", "balzak", "We'll swing by again, ma'am. Merry Christmas.", { after: 120 });
 
-s.at(ct("2025-12-20 15:30"));
+s.at(ct("2025-12-20 19:40"));
 s.say("dm-peter", "kate", "I'm going home. Next flight, whatever it is.", { after: 0 });
 s.say("dm-peter", "peter", "Everything's booked through Christmas. I asked.", { after: 60 });
 s.say("dm-peter", "kate", "Then I'll ask again.", { after: 20 });
-const view = s.say("family", "frank", "Paris! The view from Rob's window. Free.", {
-	after: 120,
-	// Photo by Anna Hunko on Unsplash (Unsplash License): https://unsplash.com/photos/kgz0aexIG9I
-	embeds: [image(`${MEDIA}/paris.jpg`, { title: "IMG_0412.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "The Eiffel Tower at dusk, its lights coming on, over the Seine" })],
-});
-s.react(view, "linnie", ["😍"]);
-s.react(view, "peter", ["😬"]);
-const wonderful = s.say("family", "frank", "Rob's TV gets one channel and it's *It's a Wonderful Life* dubbed in French.", { after: 300 });
-s.react(wonderful, "linnie", ["🇫🇷"]);
-s.react(wonderful, "megan", ["😭"]);
 
 // The first night at the house.
 s.at(ct("2025-12-20 21:02"));
@@ -288,6 +278,19 @@ s.say("dm-airline", "agent", "Ma'am, we're booked through Christmas.", { after: 
 const hope = s.say("dm-airline", "kate", "This is Christmas. The season of perpetual hope. And I don't care if I have to get out and push this plane myself, I am getting home to my son. If I have to sell my soul to the devil myself, I am going to get home to my son.", { after: 40 });
 s.say("dm-airline", "agent", "I have one seat. Dallas, tomorrow. Then you'd standby to Scranton.", { reply: hope, after: 180 });
 s.say("dm-airline", "kate", "Take it.", { after: 5 });
+
+// Paris at dusk: five in the afternoon there, ten in the morning in Chicago.
+s.at(ct("2025-12-21 10:05"));
+const view = s.say("family", "frank", "Paris! The view from Rob's window. Free.", {
+	after: 0,
+	// Photo by Anna Hunko on Unsplash (Unsplash License): https://unsplash.com/photos/kgz0aexIG9I
+	embeds: [image(`${MEDIA}/paris.jpg`, { title: "IMG_0412.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "The Eiffel Tower at dusk, its lights coming on, over the Seine" })],
+});
+s.react(view, "linnie", ["😍"]);
+s.react(view, "peter", ["😬"]);
+const wonderful = s.say("family", "frank", "Rob's TV gets one channel and it's *It's a Wonderful Life* dubbed in French.", { after: 300 });
+s.react(wonderful, "linnie", ["🇫🇷"]);
+s.react(wonderful, "megan", ["😭"]);
 
 s.at(ct("2025-12-21 11:30"));
 s.say("family", "kevin", "Shopping list:\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association", { after: 0 });
