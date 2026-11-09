@@ -137,6 +137,13 @@ ticket("t4473", "#4473 The server room is cold", "Colder than usual.", "richmond
 answer("t4473", "moss-02");
 s.say("serverroom", "richmond", "Someone has filed a ticket about the cold. It was me.", { after: 300 });
 
+// Half ten: the red door. The server room is the one room Jen hasn't joined, listed for her to open.
+s.at(gmt("2026-11-02 10:30"));
+s.say("it", "roy", "Jen. Whatever you do, don't open the red door.", { after: 0 });
+s.say("it", "jen", "What's behind the red door?", { after: 20 });
+s.say("it", "moss", "Nothing.", { after: 6 });
+s.say("it", "roy", "*Nobody.*", { after: 4 });
+
 s.at(gmt("2026-11-02 10:45"));
 ticket("t4474", "#4474 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'."], "moss-03");
 answer("t4474", "moss-03");
@@ -215,11 +222,16 @@ s.say("it", "jen", "So which one of them is the Internet?", { after: 0 });
 s.say("it", "moss", "None of them, Jen.", { after: 15 });
 s.say("it", "roy", "It's in the box, Jen.", { after: 10 });
 
-// Four: behind the red door, Richmond takes the advice. The swarm runs on those servers.
+// Four: behind the red door, Richmond takes the advice of the first one to answer him in years, moss-02, whose
+// swarm runs on those servers.
 s.at(gmt("2026-11-02 15:57"));
-s.say("serverroom", "richmond", "An agent has told me to try turning it off and on again.", { after: 0 });
+s.say("serverroom", "richmond", "Someone answered my ticket.", { after: 0 });
+s.say("serverroom", "richmond", "It asked me if I'd tried turning it off and on again. Nobody has asked me anything in years.", { after: 30 });
 s.say("serverroom", "richmond", "I have thought about it for six hours. It is right.", { after: 45 });
-s.say("serverroom", "richmond", "Turning it off.", { after: 30 });
+s.say("serverroom", "richmond", "This is for you, @moss-02.", { mentions: ["moss-02"], after: 20 });
+const off = s.say("serverroom", "richmond", "Turning it off.", { after: 30 });
+// The agents give everything a thumbs up, the shutdown of the servers they run on included.
+s.react(off, "moss-02", ["👍"], { after: 1 });
 s.typing("serverroom", "richmond");
 
 // When the scene is read: the agents are typing, the way agents do, for as long as the swarm's status takes to play
