@@ -293,7 +293,7 @@ s.react(wonderful, "linnie", ["🇫🇷"]);
 s.react(wonderful, "megan", ["😭"]);
 
 s.at(ct("2025-12-21 11:30"));
-s.say("family", "kevin", "Did the grocery shopping. By myself.\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association\n\nTotal: **$19.83**", { after: 0 });
+s.say("family", "kevin", "Did the grocery shopping. By myself.\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [x] a blowtorch\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association\n\nTotal: **$58.17**", { after: 0 });
 s.say("family", "buzz", "With WHAT money", { after: 60 });
 s.say("family", "kevin", "Yours. It was under your bed.", { after: 20 });
 s.say("family", "buzz", "KEVIN. That's my savings. And don't you dare touch Axl.", { after: 10 });
