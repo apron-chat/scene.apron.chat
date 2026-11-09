@@ -488,8 +488,11 @@ const latest = (time, text) => `${row(12)}  ${dim(time)}  ${text}`;
 const tv = (line) => `${row(13)}  ${dim("─".repeat(76))}${row(14)}  TV ▶ Angels with Filthy Souls${" ".repeat(26)}${dim("living room · vol 100")}${row(15)}     ${italic(line)}`;
 /** Seconds since nine o'clock, of a time such as "21:03:31". */
 const since9 = (time) => time.split(":").map(Number).reduce((total, part, i) => total + part * [3600, 60, 1][i], 0) - 21 * 3600;
-/** A wait of 2 to 4 seconds between updates, longer the longer the night took between them (a minute or more: 4). */
-const pace = (from, to) => Math.round(20 + (Math.min(since9(to) - since9(from), 60) / 60) * 20) * 100;
+/**
+ * The wait between updates, longer the longer the night took between them: 2 to 4 seconds (a minute or more: 4),
+ * played 40% faster, about 1.4 to 2.9.
+ */
+const pace = (from, to) => Math.round((20 + (Math.min(since9(to) - since9(from), 60) / 60) * 20) / 1.4) * 100;
 /** Moves every sensor's history on by one, to where it stands now. */
 const tick = () => {
 	for (const name of sensors) history[name] = [...history[name].slice(1), state[name][0]];
@@ -510,7 +513,7 @@ for (const [time, text, now] of night) {
 // Kevin, caught next door. It calls anyway.
 state.police = [BAD, `wanted to call: ${urges + 1} · calling anyway`];
 tick();
-status.push([pace(then, "21:09:12"), `${home}${top()}${board()}${latest("21:09:12", "next door: 2 adults, 1 small human, ")}`], [2500, "1 snow sh"]);
+status.push([pace(then, "21:09:12"), `${home}${top()}${board()}${latest("21:09:12", "next door: 2 adults, 1 small human, ")}`], [1800, "1 snow sh"]);
 s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
