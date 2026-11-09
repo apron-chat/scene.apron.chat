@@ -2,7 +2,7 @@
 come from itcrowd-avatars.webp, a two-by-two grid of pixel-art portraits split by black lines. Douglas, who'd
 commission his own, comes from itcrowd-avatar-douglas.webp, an oil portrait of him on a throne in ermine (the
 grid's tile of him goes unused). Richmond comes from itcrowd-avatar-richmond.webp, a drawing of him as a bat on a
-transparent sheet, set against the red door. The rest of the staff keep their initials, and Moss's agents share one
+transparent sheet, whole, on black. The rest of the staff keep their initials, and Moss's agents share one
 drawn face (itcrowd-art.mjs). The PNGs are committed; run this only to change them (it needs Pillow):
 
     python3 scripts/scenes/itcrowd-avatars.py
@@ -43,12 +43,10 @@ avatar = portrait.crop((left, top, left + side, top + side)).resize((256, 256), 
 avatar.quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(OUT / "douglas.png", optimize=True)
 print("scenes/itcrowd/douglas.png")
 
-# Richmond, as a bat: his face, his ears and the tops of his wings, on the red door, which he lives behind.
-RED_DOOR = "#7a1a1f"
-left, top, side = 180, 90, 900
+# Richmond, as a bat: the whole of him, wings spread, on the black of the server room with the lights off.
 bat = Image.open(HERE / "itcrowd-avatar-richmond.webp").convert("RGBA")
-door = Image.new("RGBA", bat.size, RED_DOOR)
-door.alpha_composite(bat)
-avatar = door.convert("RGB").crop((left, top, left + side, top + side)).resize((256, 256), Image.LANCZOS)
+dark = Image.new("RGBA", bat.size, "#000000")
+dark.alpha_composite(bat)
+avatar = dark.convert("RGB").resize((256, 256), Image.LANCZOS)
 avatar.quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(OUT / "richmond.png", optimize=True)
 print("scenes/itcrowd/richmond.png")
