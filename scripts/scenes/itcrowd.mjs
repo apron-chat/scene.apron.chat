@@ -81,11 +81,11 @@ s.react(launch, "patricia", ["🙏"]);
 const swarm = [
 	["#4471", "Computer won't turn on"],
 	["#4472", "What does IT stand for?"],
-	["#4473", "Fire"],
-	["#4474", "Stuck in the lift"],
-	["#4475", "The server room is cold"],
-	["#4476", "Nobody in IT answers the phone"],
-	["#4477", "Out of milk"],
+	["#4473", "The server room is cold"],
+	["#4474", "Nobody in IT answers the phone"],
+	["#4475", "Out of milk"],
+	["#4476", "Stuck in the lift"],
+	["#4477", "Fire"],
 	["#4478", "The Internet is blinking"],
 	["#4479", "Where is the any key?"],
 	["#4480", "Monitor's gone black"],
@@ -99,7 +99,7 @@ swarm.forEach((ticket, i) => {
 	live.push([900, `${row(3 + i)}${line(agents[i], ticket, yellow("reading…"))}`]);
 	live.push([700, `${row(3 + i)}${line(agents[i], ticket, green("✓ asked: off and on again?"))}${header(i + 1)}`]);
 });
-live.push([1200, `${row(14)} moss-11  ${dim("#4473")}  ${"Fire (escalated)".padEnd(31)}${yellow("calling")} 0118`]);
+live.push([1200, `${row(14)} moss-11  ${dim("#4477")}  ${"Fire (escalated)".padEnd(31)}${yellow("calling")} 0118`]);
 for (const digits of [" 999", " 881", " 999", " 119", " 72"]) live.push([900, digits]);
 s.live("swarm", live);
 
@@ -133,27 +133,29 @@ ticket("t4472", "#4472 What does IT stand for?", "Asking for a friend.", "jen", 
 answer("t4472", "moss-01");
 
 s.at(gmt("2026-11-02 10:12"));
-ticket("t4475", "#4475 The server room is cold", "Colder than usual.", "richmond", 0, ["The server room is cold. I like it cold. But today it is colder, and the servers have begun to hum in a minor key."], "moss-04");
-answer("t4475", "moss-04");
+ticket("t4473", "#4473 The server room is cold", "Colder than usual.", "richmond", 0, ["The server room is cold. I like it cold. But today it is colder, and the servers have begun to hum in a minor key."], "moss-02");
+answer("t4473", "moss-02");
 s.say("serverroom", "richmond", "Someone has filed a ticket about the cold. It was me.", { after: 300 });
 
 s.at(gmt("2026-11-02 10:45"));
-ticket("t4476", "#4476 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'."], "moss-05");
-answer("t4476", "moss-05");
+ticket("t4474", "#4474 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'."], "moss-03");
+answer("t4474", "moss-03");
 
-// Eleven: small talk with the lads upstairs, off Bluffball.
+// Eleven: small talk with the lads upstairs, off Bluffball, whose phrases are from 2008. One has aged; one hasn't.
 s.at(gmt("2026-11-02 11:10"));
 s.say("company", "phil", "Anyone see the match last night?", { after: 0 });
 s.say("company", "moss-08", "Did you see that ludicrous display last night?", { after: 3 });
-s.say("company", "phil", "What was Wenger thinking, sending Walcott on that early?", { after: 40 });
+s.say("company", "moss-08", "What was Wenger thinking, sending Walcott on that early?", { after: 2 });
+s.say("company", "phil", "Wenger left in 2018, mate.", { after: 40 });
 const walk = s.say("company", "moss-08", "The thing about Arsenal is, they always try and walk it in.", { after: 3 });
 s.react(walk, "phil", ["⚽"]);
-s.say("company", "phil", "Finally. Someone in IT who gets it.", { after: 30 });
+s.say("company", "phil", "...Still true, to be fair.", { after: 30 });
 
 s.at(gmt("2026-11-02 11:52"));
-const milk = ticket("t4477", "#4477 Out of milk", "IT kitchenette. Urgent.", "moss", 0, ["Someone has finished my milk. I came here to drink milk."], "moss-06");
-s.react(milk, "roy", ["😬"]);
-answer("t4477", "moss-06");
+// Moss's bio says who finished it.
+const milk = ticket("t4475", "#4475 Out of milk", "IT kitchenette. Urgent.", "moss", 0, ["Someone has finished my milk. I came here to drink milk."], "moss-04");
+s.react(milk, "roy", ["👀"]);
+answer("t4475", "moss-04");
 
 // Lunch: Jen's speech, and the Internet.
 s.at(gmt("2026-11-02 12:30"));
@@ -182,17 +184,17 @@ s.say("dm-douglas", "douglas", "HR say I have to rephrase that.", { after: 20 })
 s.say("dm-douglas", "douglas", "Jen. My office. Bring the Internet.", { after: 30 });
 
 s.at(gmt("2026-11-02 13:30"));
-ticket("t4474", "#4474 Stuck in the lift", "Between six and seven.", "douglas", 0, ["Stuck in the lift between six and seven. With the new girl from Legal."], "moss-03");
-const time = s.say("t4474", "douglas", "Take your time.", { after: 20 });
+ticket("t4476", "#4476 Stuck in the lift", "Between six and seven.", "douglas", 0, ["Stuck in the lift between six and seven. With the new girl from Legal."], "moss-05");
+const time = s.say("t4476", "douglas", "Take your time.", { after: 20 });
 s.delete(time, { after: 90 });
-answer("t4474", "moss-03");
+answer("t4476", "moss-05");
 
 // Two: the fire. Moss reports it formally, thinks better of it, and edits it into his email.
 s.at(gmt("2026-11-02 14:02"));
-const fire = ticket("t4473", "#4473 Fire", "Basement. Ongoing.", "moss", 0, ["Dear Sir stroke Madam, I am writing to inform you of a fire which has broken out at the premises of Reynholm Industries."], "moss-02");
+const fire = ticket("t4477", "#4477 Fire", "Basement. Ongoing.", "moss", 0, ["Dear Sir stroke Madam, I am writing to inform you of a fire which has broken out at the premises of Reynholm Industries."], "moss-06");
 s.edit(fire, "Fire! Fire! Help me! Reynholm Industries, the basement.\n\nLooking forward to hearing from you.\n\nAll the best,\nMaurice Moss", { after: 30 });
-s.say("t4473", "moss", "I'll just put this over here, with the rest of the fire.", { after: 40 });
-answer("t4473", "moss-02");
+s.say("t4477", "moss", "I'll just put this over here, with the rest of the fire.", { after: 40 });
+answer("t4477", "moss-06");
 s.say("it", "roy", "Moss, there's smoke coming from under your desk.", { after: 120 });
 s.say("it", "moss", "I know. I've filed a ticket.", { after: 10 });
 
@@ -216,7 +218,7 @@ s.say("it", "roy", "It's in the box, Jen.", { after: 10 });
 // Four: behind the red door, Richmond takes the advice. The swarm runs on those servers.
 s.at(gmt("2026-11-02 15:57"));
 s.say("serverroom", "richmond", "An agent has told me to try turning it off and on again.", { after: 0 });
-s.say("serverroom", "richmond", "I am a servant of the servers. But I will do as it says.", { after: 45 });
+s.say("serverroom", "richmond", "I have thought about it for six hours. It is right.", { after: 45 });
 s.say("serverroom", "richmond", "Turning it off.", { after: 30 });
 s.typing("serverroom", "richmond");
 
