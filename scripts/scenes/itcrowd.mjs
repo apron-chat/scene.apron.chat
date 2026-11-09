@@ -108,6 +108,8 @@ s.at(gmt("2026-11-02 09:00"));
 const meeting = s.say("company", "douglas", "Morning all. Shareholders' meeting, Thursday, 4 PM. Jen from IT will be giving a speech. About IT.", { after: 0 });
 for (const agent of agents) s.react(meeting, agent, ["👍"], { after: 0.05 });
 s.react(meeting, "phil", ["👍"], { after: 30 });
+// And one from behind the red door.
+s.react(meeting, "richmond", ["🦇"], { after: 40 });
 s.say("company", "douglas", "Who are all these people giving me the thumbs up?", { after: 60 });
 const roughly = s.say("company", "moss", "They're me, sir. Roughly.", { reply: meeting, after: 40 });
 s.react(roughly, "douglas", ["🤨"]);
@@ -145,7 +147,7 @@ s.say("it", "moss", "Nothing.", { after: 6 });
 s.say("it", "roy", "*Nobody.*", { after: 4 });
 
 s.at(gmt("2026-11-02 10:45"));
-ticket("t4474", "#4474 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'."], "moss-03");
+ticket("t4474", "#4474 Nobody in IT answers the phone", "Forty calls today.", "patricia", 0, ["I've put forty calls through to IT today. Nobody answers. Just a recording of a man saying 'have you tried turning it off and on again'.", "Three were from the server room. He didn't have a problem. He just wanted to chat."], "moss-03");
 answer("t4474", "moss-03");
 
 // Eleven: small talk with the lads upstairs, off Bluffball, whose phrases are from 2008. One has aged; one hasn't.
