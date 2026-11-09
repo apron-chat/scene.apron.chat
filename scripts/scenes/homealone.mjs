@@ -7,7 +7,7 @@
 // and isn't in it to be counted, an edit that admits who was, a bot that logs
 // the house, a deleted calling card, a public room two burglars think is
 // private, a live log of the traps that never finishes (and, in the family room,
-// the same night as one screen redrawn in place), and DMs nobody answers.
+// the same night as the house's status page), and DMs nobody answers.
 //
 //   node scripts/scenes/homealone.mjs
 import { writeFileSync } from "node:fs";
@@ -22,6 +22,7 @@ const ESC = "\u001b";
 const dim = (text) => `${ESC}[2m${text}${ESC}[0m`;
 const red = (text) => `${ESC}[31m${text}${ESC}[0m`;
 const yellow = (text) => `${ESC}[33m${text}${ESC}[0m`;
+const green = (text) => `${ESC}[32m${text}${ESC}[0m`;
 /** One line of home-alarm's log: a time, where, what, and who. */
 const event = (time, where, what, who) => `${dim(time)}  ${where.padEnd(14)}${what.padEnd(26)}${who}`;
 
@@ -430,45 +431,65 @@ s.live("christmas-eve", [
 	[1200, `${event("21:09:12", "next door", "motion", "2 adults, 1 small human, ")}`],
 	[1500, "1 snow sh"],
 ]);
-// The family room's copy is the same night on one screen, redrawn in place rather than appended: the newest trap, a
-// bar of traps sprung, and the two intruders as the camera's object detector sees them. It doesn't know their names,
-// only what they look like, and its guesses lose confidence trap by trap (a person in feathers is a chicken; one lying
-// flat in the hall, a rug). The last row never changes: Buzz's word for it. Its last frame breaks off mid-line, so the
-// rows under it keep the frame before: Kevin, still fine.
-const traps = [
-	// [time, where, what, what happened, and how each intruder now looks: [guess, confidence, state]], and whether
-	// it's one of Kevin's traps.
-	["21:00:41", "front door", "knob: 400°F", red("AAAAAH"), { 1: ["person", 97, "hand: 400°F"] }],
-	["21:00:58", "basement", "steps: ice", "down", { 2: ["person", 96, "horizontal"] }],
-	["21:01:20", "doggy door", "BB gun", red("AAAAAH"), { 2: ["person", 94, "forehead: BB"] }],
-	["21:02:07", "laundry chute", "iron", "face", { 2: ["person", 89, "face: iron-shaped"] }],
-	["21:02:40", "back door", "blowtorch", yellow("hat on fire"), { 1: ["person", 84, "head: on fire"] }],
-	["21:03:15", "basement", "stairs: tar", "shoes lost", { 2: ["person", 87, "barefoot"] }],
-	["21:03:31", "basement", "stairs: nail", red("AAAAAAAAAAAH"), { 1: ["person", 79, "bald, hopping"] }],
-	["21:04:02", "kitchen", "window: ornaments", "barefoot", { 2: ["person", 77, "barefoot, on glass"] }],
-	["21:04:30", "front hall", "fan: feathers", "feathered", { 1: ["chicken", 64, "bald, hopping"] }],
-	["21:05:11", "stairs", "paint can ×2", "face ×2", { 1: ["chicken", 61, "dazed"], 2: ["person", 70, "dazed"] }],
-	["21:05:50", "dining room", "Axl (tarantula)", red("AAAAAAAAAAAAAAAAH"), { 2: ["person", 52, "tarantula: on face"] }],
-	["21:05:52", "dining room", "crowbar", `intruder 1 → intruder 2 ${dim("(not a trap)")}`, { 2: ["person", 41, "crowbarred"] }, false],
-	["21:06:30", "hall", "Micro Machines", "down", { 2: ["rug", 38, "horizontal"] }],
-	["21:07:40", "zip line", "rope: cut", "down ×2", { 1: ["chicken", 59, "in the snow"], 2: ["rug", 44, "in the snow"] }],
+// The family room's copy is the same night as the house's status page, redrawn in place rather than appended: a bar
+// of history for each part of the house (an evening of green, then the traps), the latest incident, and, along the
+// bottom, what's on the living-room TV, which plays Kevin's gangster film to the end. home-alarm doesn't know who
+// broke in, so they are visitors: operational when they arrive. Kevin's row never changes: Buzz's word for it. The
+// last frame breaks off in its incident line, so everything else keeps the frame before.
+const OK = 0, DEGRADED = 1, OUTAGE = 2, NONE = -1;
+const shade = { [NONE]: (text) => `${ESC}[90m${text}${ESC}[39m`, [OK]: green, [DEGRADED]: yellow, [OUTAGE]: red };
+const parts = [["doors", "doors"], ["basement", "basement"], ["inside", "ground floor"], ["visitors", "visitors (2)"], ["kevin", "Kevin"]];
+const subtitles = {
+	start: "Who is it?",
+	"21:00:58": "Leave it on the doorstep and get the hell outta here.",
+	"21:03:15": "I'm gonna give you to the count of ten…",
+	"21:05:11": "One… two…",
+	"21:05:50": "…ten.",
+	"21:05:52": "[gunfire]",
+	"21:07:40": "Keep the change, ya filthy animal.",
+};
+const night = [
+	// [time, the incident, how parts of the house now stand: [level, detail]], and the summary, when it changes.
+	["21:00:41", "front door: knob at 400°F → visitor: AAAAAH", { doors: [DEGRADED, "knob 400°F"], visitors: [DEGRADED, "1 injury"] }, [DEGRADED, "Degraded performance"]],
+	["21:00:58", "basement: steps iced → visitor down", { basement: [DEGRADED, "ice"], visitors: [DEGRADED, "2 injuries"] }],
+	["21:01:20", "doggy door: BB gun → visitor: AAAAAH", { doors: [DEGRADED, "knob 400°F, BB"], visitors: [DEGRADED, "3 injuries"] }],
+	["21:02:07", "laundry chute: iron → visitor's face", { basement: [DEGRADED, "ice, iron"], visitors: [DEGRADED, "4 injuries"] }],
+	["21:02:40", "back door: blowtorch → visitor's hat on fire", { doors: [OUTAGE, "knob 400°F, BB, blowtorch"], visitors: [OUTAGE, "partial outage · 5 injuries"] }, [OUTAGE, "Partial outage"]],
+	["21:03:15", "basement stairs: tar → visitor's shoes", { basement: [OUTAGE, "ice, iron, tar"], visitors: [OUTAGE, "partial outage · 6 injuries"] }],
+	["21:03:31", "basement stairs: nail → visitor: AAAAAAAAAAAH", { basement: [OUTAGE, "ice, iron, tar, nail"], visitors: [OUTAGE, "partial outage · 7 injuries"] }],
+	["21:04:02", "kitchen window: ornaments → visitor barefoot", { inside: [DEGRADED, "glass"], visitors: [OUTAGE, "partial outage · 8 injuries"] }],
+	["21:04:30", "front hall: fan, feathers → visitor feathered", { inside: [DEGRADED, "glass, feathers"], visitors: [OUTAGE, "partial outage · 9 injuries"] }],
+	["21:05:11", "stairs: paint cans → both visitors", { inside: [OUTAGE, "glass, feathers, paint"], visitors: [OUTAGE, "partial outage · 11 injuries"] }],
+	["21:05:50", "dining room: Axl → visitor: AAAAAAAAAAAAAAAAH", { inside: [OUTAGE, "glass, feathers, paint, Axl"], visitors: [OUTAGE, "partial outage · 12 injuries"] }],
+	["21:05:52", "dining room: crowbar, visitor → visitor", { visitors: [OUTAGE, "partial outage · 13 injuries"] }],
+	["21:06:30", "hall: Micro Machines → visitor down", { inside: [OUTAGE, "glass, feathers, paint, Axl, toys"], visitors: [OUTAGE, "partial outage · 14 injuries"] }],
+	["21:07:40", "zip line: rope cut → both visitors down", { visitors: [OUTAGE, "major outage · 16 injuries"] }, [OUTAGE, "Major outage"]],
 ];
-const total = traps.filter(([, , , , , trap = true]) => trap).length;
+const CELLS = 24;
 const home = `${ESC}[H`;
 const row = (n) => `${ESC}[${n};1H${ESC}[2K`;
-const header = (time) => `  ${dim("home-alarm · 671 Lincoln Blvd · mode: Kevin · police: on hold")}      ${time}`;
-const newest = (where, what, outcome) => `  ${where.padEnd(14)}${what.padEnd(20)}${outcome}`;
-const bar = (sprung) => `  ${dim("traps")}        ${"██".repeat(sprung)}${dim("░░".repeat(total - sprung))}  ${sprung}/${total}`;
-const intruder = (n, [guess, confidence, state]) => `  ${dim(`intruder ${n}`)}   ${guess.padEnd(9)}${dim(`${confidence}%`)}   ${state}`;
-const looks = { 1: ["person", 98, "at the front door"], 2: ["person", 97, "at the basement door"] };
-const status = [[400, `${ESC}[2J${home}${header("21:00:00")}${row(3)}  ${dim("armed, waiting")}${row(5)}${bar(0)}${row(6)}${intruder(1, looks[1])}${row(7)}${intruder(2, looks[2])}${row(8)}  ${dim("Kevin")}        fine`]];
-let sprung = 0;
-for (const [time, where, what, outcome, now, trap = true] of traps) {
-	if (trap) sprung++;
-	Object.assign(looks, now);
-	status.push([time === "21:05:52" ? 500 : 900, `${home}${row(1)}${header(time)}${row(3)}${newest(where, what, outcome)}${row(5)}${bar(sprung)}${row(6)}${intruder(1, looks[1])}${row(7)}${intruder(2, looks[2])}`]);
+const italic = (text) => `${ESC}[3m${text}${ESC}[23m`;
+const state = { doors: [OK, "operational"], basement: [OK, "operational"], inside: [OK, "operational"], visitors: [OK, "operational"], kevin: [OK, "operational · 100.00% uptime"] };
+// An evening of history: the house green all along, the visitors not there yet.
+const history = Object.fromEntries(parts.map(([key]) => [key, Array(CELLS).fill(key === "visitors" ? NONE : OK)]));
+history.visitors[CELLS - 1] = OK;
+const top = (summary) => `${row(1)}  671 Lincoln Blvd status${" ".repeat(24)}${dim("mode: Kevin · police: on hold")}${row(2)}  ${shade[summary[0]]("●")} ${summary[1]}`;
+// Each part's detail, its status (operational, partial or major outage) in its color.
+const detail = ([level, text]) => text.replace(/^(operational|partial outage|major outage)/, (word) => shade[level](word));
+const board = () => parts.map(([key, label], i) => `${row(4 + i)}  ${dim(label.padEnd(14))}${history[key].map((level) => shade[level]("▐")).join("")}   ${detail(state[key])}`).join("");
+const incident = (time, text) => `${row(10)}  ${dim(time)}  ${text}`;
+const tv = (line) => `${row(12)}  ${dim("─".repeat(76))}${row(13)}  TV ▶ Angels with Filthy Souls${" ".repeat(26)}${dim("living room · vol 100")}${row(14)}     ${italic(line)}`;
+let summary = [OK, "All systems operational"];
+let subtitle = subtitles.start;
+const status = [[400, `${ESC}[2J${home}${top(summary)}${board()}${incident("21:00:00", dim("2 visitors at the doors"))}${tv(subtitle)}`]];
+for (const [time, text, now, next] of night) {
+	Object.assign(state, now);
+	if (next) summary = next;
+	subtitle = subtitles[time] ?? subtitle;
+	for (const [key] of parts) history[key] = [...history[key].slice(1), state[key][0]];
+	status.push([time === "21:05:52" ? 500 : 900, `${home}${top(summary)}${board()}${incident(time, text)}${tv(subtitle)}`]);
 }
-status.push([1200, `${home}${row(1)}${header("21:09:12")}${row(3)}${newest("next door", "motion", "1 chicken, 1 rug, 1 small human, ")}`], [1500, "1 snow sh"]);
+status.push([1200, `${home}${top(summary)}${board()}${incident("21:09:12", "next door: motion → 2 visitors, 1 small human, ")}`], [1500, "1 snow sh"]);
 s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
