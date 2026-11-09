@@ -128,9 +128,12 @@ them.
 | [`piper`](https://scene.apron.chat/piper) | Pied Piper's long weekend: an edit that starts a thread, a 3 AM terminal alarm, a bot's incident review, live text that never finishes, a board seat that walks out, a deleted video, DMs |
 | [`homealone`](https://scene.apron.chat/homealone) | the McCallisters' week: a kid who leaves the family room and isn't counted, an edit that admits who was, a house bot's log, a deleted calling card, burglars in a public room, unanswered DMs, a live log of the traps that never finishes, and home-alarm's sensors, live, redrawn in place |
 
-`team`, `agent` and `rich` are apron.chat's screenshot scenes
-(`screenshot/scenes/` there), copied unchanged into `scripts/scenes/fixtures/`
-and converted by `scripts/scenes/fixtures.mjs`. `piper` began as the fourth,
+`team`, `agent` and `rich` began as apron.chat's screenshot scenes, copied
+unchanged into `scripts/scenes/fixtures/` and converted by
+`scripts/scenes/fixtures.mjs`. apron.chat's landing page now takes its
+screenshots from the scenes here (its `screenshot/capture.mjs`): `piper` for
+Team chat and the link preview, `agent` for Coding agents, and `homealone`
+for Family chat. `piper` began as the fourth fixture,
 and grew into its own script, `scripts/scenes/piper.mjs`, whose last
 afternoon is still that fixture's. It's a parody of HBO's *Silicon Valley*;
 its cast's avatars are cut by `scripts/scenes/piper-avatars.py` from
