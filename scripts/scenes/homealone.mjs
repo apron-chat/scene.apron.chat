@@ -6,7 +6,8 @@
 // at nine. What a chat adds: a kid who leaves the family room the night before
 // and isn't in it to be counted, an edit that admits who was, a bot that logs
 // the house, a deleted calling card, a public room two burglars think is
-// private, a live log of the traps that never finishes, and DMs nobody answers.
+// private, a live log of the traps that never finishes (and, in the family room,
+// the same night as home-alarm's sensors see it), and DMs nobody answers.
 //
 //   node scripts/scenes/homealone.mjs
 import { writeFileSync } from "node:fs";
@@ -21,6 +22,7 @@ const ESC = "\u001b";
 const dim = (text) => `${ESC}[2m${text}${ESC}[0m`;
 const red = (text) => `${ESC}[31m${text}${ESC}[0m`;
 const yellow = (text) => `${ESC}[33m${text}${ESC}[0m`;
+const green = (text) => `${ESC}[32m${text}${ESC}[0m`;
 /** One line of home-alarm's log: a time, where, what, and who. */
 const event = (time, where, what, who) => `${dim(time)}  ${where.padEnd(14)}${what.padEnd(26)}${who}`;
 
@@ -196,7 +198,7 @@ s.say("family", "fuller", "Is the Pepsi free on the plane?", { after: 30 });
 
 // Kevin wakes up in an empty house.
 s.at(ct("2025-12-20 09:40"));
-s.say("security", "homealarm", "Motion: upstairs (third floor). 1 small human. Everyone else: gone since 08:01.", { after: 0 });
+s.say("security", "homealarm", "Motion: upstairs (third floor). 1 small human. Everyone else: gone since 08:01. Garage: open.", { after: 0 });
 s.join("family", "kevin", 300);
 s.say("family", "kevin", "Mom? Dad?", { after: 10 });
 s.say("family", "kevin", "Buzz?? I'm going in your room", { after: 120 });
@@ -227,34 +229,24 @@ s.say("family", "kevin", "You'd better come out and stop me!", { after: 20 });
 s.react(junk, "buzz", ["🍿"]);
 s.say("dm-kevin", "kate", "Kevin. Mom. Please look at your messages.", { after: 900 });
 
-// Paris, and the police in Illinois.
-s.at(ct("2025-12-20 13:30"));
+// Paris, and the police in Illinois. The flight lands about five in the afternoon, Chicago time: midnight in Paris.
+s.at(ct("2025-12-20 17:40"));
 s.say("dm-police", "kate", "Hello, I'm calling from Paris, France. My son is home alone at 671 Lincoln Boulevard, Winnetka. He's eight.", { after: 0 });
 s.say("dm-police", "balzak", "Ma'am, you want the Family Affairs desk. I'll transfer you.", { after: 240 });
 s.say("dm-police", "kate", "I was transferred FROM the Family Affairs desk.", { after: 30 });
 s.say("dm-police", "balzak", "...Hold, please.", { after: 600 });
 s.say("dm-police", "balzak", "Okay. I sent a car.", { after: 1800 });
 
-s.at(ct("2025-12-20 14:41"));
+s.at(ct("2025-12-20 18:51"));
 s.say("security", "homealarm", "Front door: knock (Winnetka PD). Upstairs: motion → master bedroom → **under the bed**. Front door: knock. Visitor: left.", { after: 0 });
 s.say("dm-police", "balzak", "Officer knocked. Nobody answered. House looks fine, lights on timers. I'd say everything's okay.", { after: 600 });
 s.say("dm-police", "kate", "He's EIGHT. He's hiding under the bed.", { after: 30 });
 s.say("dm-police", "balzak", "We'll swing by again, ma'am. Merry Christmas.", { after: 120 });
 
-s.at(ct("2025-12-20 15:30"));
+s.at(ct("2025-12-20 19:40"));
 s.say("dm-peter", "kate", "I'm going home. Next flight, whatever it is.", { after: 0 });
 s.say("dm-peter", "peter", "Everything's booked through Christmas. I asked.", { after: 60 });
 s.say("dm-peter", "kate", "Then I'll ask again.", { after: 20 });
-const view = s.say("family", "frank", "Paris! The view from Rob's window. Free.", {
-	after: 120,
-	// Photo by Anna Hunko on Unsplash (Unsplash License): https://unsplash.com/photos/kgz0aexIG9I
-	embeds: [image(`${MEDIA}/paris.jpg`, { title: "IMG_0412.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "The Eiffel Tower at dusk, its lights coming on, over the Seine" })],
-});
-s.react(view, "linnie", ["😍"]);
-s.react(view, "peter", ["😬"]);
-const wonderful = s.say("family", "frank", "Rob's TV gets one channel and it's *It's a Wonderful Life* dubbed in French.", { after: 300 });
-s.react(wonderful, "linnie", ["🇫🇷"]);
-s.react(wonderful, "megan", ["😭"]);
 
 // The first night at the house.
 s.at(ct("2025-12-20 21:02"));
@@ -287,8 +279,24 @@ const hope = s.say("dm-airline", "kate", "This is Christmas. The season of perpe
 s.say("dm-airline", "agent", "I have one seat. Dallas, tomorrow. Then you'd standby to Scranton.", { reply: hope, after: 180 });
 s.say("dm-airline", "kate", "Take it.", { after: 5 });
 
+// Paris at dusk: five in the afternoon there, ten in the morning in Chicago.
+s.at(ct("2025-12-21 10:05"));
+const view = s.say("family", "frank", "Paris! The view from Rob's window. Free.", {
+	after: 0,
+	// Photo by Anna Hunko on Unsplash (Unsplash License): https://unsplash.com/photos/kgz0aexIG9I
+	embeds: [image(`${MEDIA}/paris.jpg`, { title: "IMG_0412.jpg", type: "image/jpeg", width: 800, height: 1200, alt: "The Eiffel Tower at dusk, its lights coming on, over the Seine" })],
+});
+s.react(view, "linnie", ["😍"]);
+s.react(view, "peter", ["😬"]);
+const wonderful = s.say("family", "frank", "Rob's TV gets one channel and it's *It's a Wonderful Life* dubbed in French.", { after: 300 });
+s.react(wonderful, "linnie", ["🇫🇷"]);
+s.react(wonderful, "megan", ["😭"]);
+const wet = s.say("family", "frank", "Fuller had every free Pepsi on the plane. He wet Rob's guest bed. Rob's paying for that too.", { after: 200 });
+s.react(wet, "kevin", ["😎"]);
+
 s.at(ct("2025-12-21 11:30"));
-s.say("family", "kevin", "Shopping list:\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association", { after: 0 });
+const shopping = s.say("family", "kevin", "Did the grocery shopping. By myself.\n\n- [x] milk\n- [x] orange juice\n- [x] fabric softener\n- [x] TV dinner (macaroni and cheese)\n- [x] toy army men\n- [x] a blowtorch\n- [ ] toilet paper\n- [ ] a toothbrush approved by the American Dental Association\n\nTotal: **$58.17**", { after: 0 });
+s.react(shopping, "megan", ["😶"]);
 s.say("family", "buzz", "With WHAT money", { after: 60 });
 s.say("family", "kevin", "Yours. It was under your bed.", { after: 20 });
 s.say("family", "buzz", "KEVIN. That's my savings. And don't you dare touch Axl.", { after: 10 });
@@ -297,6 +305,8 @@ s.say("dm-kevin", "kate", "Kevin, don't open the door to anyone. I'm coming home
 s.at(ct("2025-12-21 13:05"));
 s.say("plumbing", "marv", "Harry, that kid at the light on Main was staring at us.", { after: 0 });
 s.say("plumbing", "harry", "Kids stare. It's what they do. Drive.", { after: 20 });
+const van = s.say("watch", "kevin", "The policeman with the gold tooth just drove past me in a plumbing van. It says Oh, K.", { after: 40 });
+s.react(van, "buzz", ["🙄"]);
 
 // Monday the 22nd: Marv's calling card, and a party.
 s.at(ct("2025-12-22 10:15"));
@@ -406,29 +416,113 @@ s.say("plumbing", "harry", "Nine o'clock. I'll take the front. You take the base
 s.say("plumbing", "marv", "Should I leave the water running?", { after: 8 });
 const alarm = s.say("security", "homealarm", "🚨 **Alarm**: front door, back door, basement. Live log:", { after: 40, embeds: [{ kind: "terminal", title: "home-alarm events", url: `${MEDIA}/live/christmas-eve` }] });
 s.react(alarm, "kevin", ["😈"]);
-const mirror = s.say("family", "homealarm", "🚨 **Alarm** at the house: front door, back door, basement. Live log in Home Security.", { after: 2, embeds: [{ kind: "terminal", title: "home-alarm events", url: `${MEDIA}/live/christmas-eve` }] });
+const mirror = s.say("family", "homealarm", "🚨 **Alarm** at the house. Kevin says not to worry.", { after: 2, embeds: [{ kind: "terminal", title: "home-alarm status", url: `${MEDIA}/live/christmas-eve-status` }] });
 s.react(mirror, "buzz", ["🍿"]);
 s.react(mirror, "kate", ["😱"]);
 s.live("christmas-eve", [
 	[400, `${dim("$ home-alarm tail --house 671-lincoln")}\n`],
-	[700, `${event("21:00:41", "front door", "knob: 400°F (BBQ starter)", `Harry: ${red("AAAAAH")}`)}\n`],
-	[700, `${event("21:00:58", "basement", "steps: ice", "Marv: down")}\n`],
-	[700, `${event("21:01:20", "doggy door", "BB gun", `Marv: ${red("AAAAAH")}`)}\n`],
-	[800, `${event("21:02:07", "basement", "laundry chute: iron", "Marv: face")}\n`],
-	[800, `${event("21:02:40", "back door", "blowtorch", `Harry: ${yellow("hat on fire")}`)}\n`],
-	[800, `${event("21:03:15", "basement", "stairs: tar", "Marv: shoes lost")}\n`],
-	[700, `${event("21:03:31", "basement", "stairs: nail", `Harry: ${red("AAAAAAAAAAAH")}`)}\n`],
-	[800, `${event("21:04:02", "kitchen", "window: ornaments", "Marv: barefoot")}\n`],
-	[800, `${event("21:04:30", "front hall", "fan: feathers", "Harry: chicken")}\n`],
+	[700, `${event("21:00:41", "front door", "knob: 400°F (BBQ starter)", `intruder 1: ${red("AAAAAH")}`)}\n`],
+	[700, `${event("21:00:58", "basement", "steps: ice", "intruder 2: down")}\n`],
+	[700, `${event("21:01:20", "doggy door", "BB gun", `intruder 2: ${red("AAAAAH")}`)}\n`],
+	[800, `${event("21:02:07", "basement", "laundry chute: iron", "intruder 2: face")}\n`],
+	[800, `${event("21:02:40", "back door", "blowtorch", `intruder 1: ${yellow("hat on fire")}`)}\n`],
+	[800, `${event("21:03:15", "basement", "stairs: tar", "intruder 2: shoes lost")}\n`],
+	[700, `${event("21:03:31", "basement", "stairs: nail", `intruder 1: ${red("AAAAAAAAAAAH")}`)}\n`],
+	[800, `${event("21:04:02", "kitchen", "window: ornaments", "intruder 2: barefoot")}\n`],
+	[800, `${event("21:04:30", "front hall", "fan: feathers", "intruder 1: chicken")}\n`],
 	[800, `${event("21:05:11", "stairs", "paint can ×2", "both")}\n`],
-	[800, `${event("21:05:50", "dining room", "Axl (tarantula)", `Marv: ${red("AAAAAAAAAAAAAAAAH")}`)}\n`],
-	[500, `${event("21:05:52", "dining room", "crowbar", "Harry → Marv")}\n`],
-	[800, `${event("21:06:30", "hall", "Micro Machines", "Marv: down")}\n`],
+	[800, `${event("21:05:50", "dining room", "Axl (tarantula)", `intruder 2: ${red("AAAAAAAAAAAAAAAAH")}`)}\n`],
+	[500, `${event("21:05:52", "dining room", "crowbar", "intruder 1 → intruder 2")}\n`],
+	[800, `${event("21:06:30", "hall", "Micro Machines", "intruder 2: down")}\n`],
 	[900, `${event("21:07:04", "attic", "zip line → treehouse", "1 small human (Kevin)")}\n`],
 	[900, `${event("21:07:40", "zip line", "rope: cut", "2 adults: down")}\n`],
 	[1200, `${event("21:09:12", "next door", "motion", "2 adults, 1 small human, ")}`],
 	[1500, "1 snow sh"],
 ]);
+// The family room's copy is the same night as home-alarm sees it, sensor by sensor, redrawn in place rather than
+// appended: a bar of history for each (an evening of green, then the traps), what each reports in its own narrow terms
+// (the smoke detector smells a hat; the thermostat minds the doors), the latest event, and, along the bottom, the
+// living-room TV, playing Kevin's gangster film to the end. It doesn't know who broke in: they're adults, or a chicken.
+// It promised Kevin not to call the police until he says (in Battle plan), and counts every time it wanted to. Its
+// last frame is Kevin caught next door: it calls anyway, then breaks off mid-line, so Kevin's row keeps the frame
+// before: fine.
+const OK = 0, WARN = 1, BAD = 2;
+const shade = { [OK]: green, [WARN]: yellow, [BAD]: red };
+const sensors = ["doorbell", "front door", "smoke", "thermostat", "motion", "police", "Kevin"];
+const subtitles = {
+	start: "Who is it?",
+	"21:00:58": "Leave it on the doorstep and get the hell outta here.",
+	"21:03:15": "I'm gonna give you to the count of ten…",
+	"21:05:11": "One… two…",
+	"21:05:50": "…ten.",
+	"21:05:52": "[gunfire]",
+	"21:07:40": "Keep the change, ya filthy animal.",
+};
+const night = [
+	// [time, what happened, and what the sensors now report: [level, text]].
+	["21:00:41", "front door: knob at 400°F · adult: AAAAAH", { "front door": [BAD, "knob 400°F (Kevin's setting)"] }],
+	["21:00:58", "basement steps: ice · adult: down", { thermostat: [WARN, "67°F · basement door open"], motion: [WARN, "1 small human, 2 adults"] }],
+	["21:01:20", "doggy door: BB · adult: AAAAAH", {}],
+	["21:02:07", "laundry chute: iron · adult: face", {}],
+	["21:02:40", "back door: blowtorch · adult: hat on fire", { smoke: [BAD, "detected: 1 hat"], thermostat: [WARN, "66°F · back door open"] }],
+	["21:03:15", "basement stairs: tar · adult: shoes off", {}],
+	["21:03:31", "basement stairs: nail · adult: AAAAAAAAAAAH", {}],
+	["21:04:02", "kitchen window: ornaments · adult: barefoot", { thermostat: [WARN, "65°F · kitchen window open"] }],
+	["21:04:30", "front hall: fan, feathers · adult: feathered", { motion: [BAD, "1 small human, 1 adult, 1 chicken (?)"] }],
+	["21:05:11", "stairs: paint cans · 2 adults: face", {}],
+	["21:05:50", "dining room: Axl · adult: AAAAAAAAAAAAAAAAH", { motion: [BAD, "1 small human, 1 adult, 1 chicken (?), 1 spider"] }],
+	["21:05:52", "dining room: crowbar · adult → adult", {}],
+	["21:06:30", "hall: Micro Machines · adult: down", {}],
+	["21:07:40", "zip line: rope cut · 2 adults: down", { thermostat: [WARN, "63°F · please close the back door"], motion: [BAD, "1 spider · yard: 1 adult, 1 chicken (?)"] }],
+];
+const CELLS = 16;
+const home = `${ESC}[H`;
+const row = (n) => `${ESC}[${n};1H${ESC}[2K`;
+const italic = (text) => `${ESC}[3m${text}${ESC}[23m`;
+const state = {
+	doorbell: [WARN, "2 unfamiliar faces · didn't ring"],
+	"front door": [OK, "locked"],
+	smoke: [OK, "clear"],
+	thermostat: [OK, "68°F"],
+	motion: [OK, "1 small human"],
+	police: [OK, "on hold (Kevin said)"],
+	Kevin: [OK, "fine"],
+};
+// An evening of history, all green, then where each stands at nine.
+const history = Object.fromEntries(sensors.map((name) => [name, [...Array(CELLS - 1).fill(OK), state[name][0]]]));
+const top = () => `${row(1)}  home-alarm · 671 Lincoln Blvd${" ".repeat(36)}${dim("mode: Kevin")}${row(2)}  ${green("●")} Everything is fine. Kevin says.`;
+const board = () => sensors.map((name, i) => `${row(4 + i)}  ${dim(name.padEnd(12))}${history[name].map((level) => shade[level]("▐")).join("")}  ${state[name][1]}`).join("");
+const latest = (time, text) => `${row(12)}  ${dim(time)}  ${text}`;
+const tv = (line) => `${row(13)}  ${dim("─".repeat(76))}${row(14)}  TV ▶ Angels with Filthy Souls${" ".repeat(26)}${dim("living room · vol 100")}${row(15)}     ${italic(line)}`;
+/** Seconds since nine o'clock, of a time such as "21:03:31". */
+const since9 = (time) => time.split(":").map(Number).reduce((total, part, i) => total + part * [3600, 60, 1][i], 0) - 21 * 3600;
+/**
+ * The wait between updates, longer the longer the night took between them: 2 to 4 seconds (a minute or more: 4),
+ * played 40% faster, about 1.4 to 2.9.
+ */
+const pace = (from, to) => Math.round((20 + (Math.min(since9(to) - since9(from), 60) / 60) * 20) / 1.4) * 100;
+/** Moves every sensor's history on by one, to where it stands now. */
+const tick = () => {
+	for (const name of sensors) history[name] = [...history[name].slice(1), state[name][0]];
+};
+let subtitle = subtitles.start;
+const status = [[400, `${ESC}[2J${home}${top()}${board()}${latest("21:00:00", dim("2 adults at the doors"))}${tv(subtitle)}`]];
+let then = "21:00:00";
+let urges = 0;
+for (const [time, text, now] of night) {
+	Object.assign(state, now);
+	urges++;
+	state.police = [urges < 5 ? WARN : BAD, `wanted to call: ${urges} · allowed: 0`];
+	subtitle = subtitles[time] ?? subtitle;
+	tick();
+	status.push([pace(then, time), `${home}${top()}${board()}${latest(time, text)}${tv(subtitle)}`]);
+	then = time;
+}
+// Kevin, caught next door. It calls anyway.
+state.police = [BAD, `wanted to call: ${urges + 1} · calling anyway`];
+tick();
+status.push([pace(then, "21:09:12"), `${home}${top()}${board()}${latest("21:09:12", "next door: 2 adults, 1 small human, ")}`], [1800, "1 snow sh"]);
+s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
 s.at(ct("2025-12-24 21:08"));
