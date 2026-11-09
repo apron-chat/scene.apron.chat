@@ -479,17 +479,23 @@ const detail = ([level, text]) => text.replace(/^(operational|partial outage|maj
 const board = () => parts.map(([key, label], i) => `${row(4 + i)}  ${dim(label.padEnd(14))}${history[key].map((level) => shade[level]("▐")).join("")}   ${detail(state[key])}`).join("");
 const incident = (time, text) => `${row(10)}  ${dim(time)}  ${text}`;
 const tv = (line) => `${row(12)}  ${dim("─".repeat(76))}${row(13)}  TV ▶ Angels with Filthy Souls${" ".repeat(26)}${dim("living room · vol 100")}${row(14)}     ${italic(line)}`;
+/** Seconds since nine o'clock, of a time such as "21:03:31". */
+const since9 = (time) => time.split(":").map(Number).reduce((total, part, i) => total + part * [3600, 60, 1][i], 0) - 21 * 3600;
+/** A wait of 2 to 4 seconds between updates, longer the longer the night took between them (a minute or more: 4). */
+const pace = (from, to) => Math.round(20 + (Math.min(since9(to) - since9(from), 60) / 60) * 20) * 100;
 let summary = [OK, "All systems operational"];
 let subtitle = subtitles.start;
 const status = [[400, `${ESC}[2J${home}${top(summary)}${board()}${incident("21:00:00", dim("2 visitors at the doors"))}${tv(subtitle)}`]];
+let then = "21:00:00";
 for (const [time, text, now, next] of night) {
 	Object.assign(state, now);
 	if (next) summary = next;
 	subtitle = subtitles[time] ?? subtitle;
 	for (const [key] of parts) history[key] = [...history[key].slice(1), state[key][0]];
-	status.push([time === "21:05:52" ? 500 : 900, `${home}${top(summary)}${board()}${incident(time, text)}${tv(subtitle)}`]);
+	status.push([pace(then, time), `${home}${top(summary)}${board()}${incident(time, text)}${tv(subtitle)}`]);
+	then = time;
 }
-status.push([1200, `${home}${top(summary)}${board()}${incident("21:09:12", "next door: motion → 2 visitors, 1 small human, ")}`], [1500, "1 snow sh"]);
+status.push([pace(then, "21:09:12"), `${home}${top(summary)}${board()}${incident("21:09:12", "next door: motion → 2 visitors, 1 small human, ")}`], [2500, "1 snow sh"]);
 s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
