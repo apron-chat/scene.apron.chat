@@ -155,9 +155,10 @@ and the polka behind its voice message is from Pixabay
 Crowd*: Moss automates Roy with twelve agents, `moss-00` to `moss-11`, on the
 Support Desk. `scripts/scenes/itcrowd-art.mjs` draws its pictures: the
 swarm's one avatar, the scene's image, and the Internet.
-`scripts/scenes/itcrowd-avatars.py` cuts Jen, Roy, Moss and Douglas from
-`itcrowd-avatars.webp`, a grid of them in pixel art; the rest of the staff
-keep initials.
+`scripts/scenes/itcrowd-avatars.py` cuts Jen, Roy and Moss from
+`itcrowd-avatars.webp`, a grid of them in pixel art, and Douglas from
+`itcrowd-avatar-douglas.webp`, the oil portrait he'd commission; the rest of
+the staff keep initials.
 
 ### Adding a scene
 
