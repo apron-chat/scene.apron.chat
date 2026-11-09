@@ -127,6 +127,7 @@ them.
 | [`rich`](https://scene.apron.chat/rich) | an uploaded image, a mention, a link preview, reactions, typing |
 | [`piper`](https://scene.apron.chat/piper) | Pied Piper's long weekend: an edit that starts a thread, a 3 AM terminal alarm, a bot's incident review, live text that never finishes, a board seat that walks out, a deleted video, DMs |
 | [`homealone`](https://scene.apron.chat/homealone) | the McCallisters' week: a kid who leaves the family room and isn't counted, an edit that admits who was, a house bot's log, a deleted calling card, burglars in a public room, unanswered DMs, a live log of the traps that never finishes, and home-alarm's sensors, live, redrawn in place |
+| [`itcrowd`](https://scene.apron.chat/itcrowd) | Reynholm Industries' Support Desk: a swarm of twelve agents, a thread per ticket and one answer for all of them, a live terminal of the swarm, an edit that turns a fire report into an email, a message HR made Douglas delete, twelve bots reacting at once, typing from several agents, and a server room nobody has joined |
 
 `team`, `agent` and `rich` began as apron.chat's screenshot scenes, copied
 unchanged into `scripts/scenes/fixtures/` and converted by
@@ -150,6 +151,14 @@ from `homealone-avatars-family.webp`; the rest of the family keep initials.
 Its photo, Frank's Eiffel Tower, is from Unsplash (Unsplash License),
 and the polka behind its voice message is from Pixabay
 (Pixabay Content License), credited in the script.
+`itcrowd` (`scripts/scenes/itcrowd.mjs`) is a parody of Channel 4's *The IT
+Crowd*: Moss automates Roy with twelve agents, `moss-00` to `moss-11`, on the
+Support Desk. `scripts/scenes/itcrowd-art.mjs` draws its pictures: the
+swarm's one avatar, the scene's image, and the Internet.
+`scripts/scenes/itcrowd-avatars.py` cuts Jen, Roy and Moss from
+`itcrowd-avatars.webp`, a grid of them in pixel art, and Douglas from
+`itcrowd-avatar-douglas.webp`, the oil portrait he'd commission; the rest of
+the staff keep initials.
 
 ### Adding a scene
 
