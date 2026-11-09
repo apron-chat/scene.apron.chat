@@ -430,46 +430,45 @@ s.live("christmas-eve", [
 	[1200, `${event("21:09:12", "next door", "motion", "2 adults, 1 small human, ")}`],
 	[1500, "1 snow sh"],
 ]);
-// The family room's copy is the same night on one screen, redrawn in place rather than appended: the newest trap,
-// flashed then settled, a bar of traps sprung, the burglars' tally, and a last row that never changes, Buzz's word for
-// it. Its last frame breaks off mid-line, so the rows under it keep the frame before: Kevin, still fine.
+// The family room's copy is the same night on one screen, redrawn in place rather than appended: the newest trap, a
+// bar of traps sprung, and the two intruders as the camera's object detector sees them. It doesn't know their names,
+// only what they look like, and its guesses lose confidence trap by trap (a person in feathers is a chicken; one lying
+// flat in the hall, a rug). The last row never changes: Buzz's word for it. Its last frame breaks off mid-line, so the
+// rows under it keep the frame before: Kevin, still fine.
 const traps = [
-	// [time, where, what, who's hit, what they say], and whether it's one of Kevin's traps.
-	["21:00:41", "front door", "knob: 400°F", ["harry"], red("AAAAAH")],
-	["21:00:58", "basement", "steps: ice", ["marv"], "down"],
-	["21:01:20", "doggy door", "BB gun", ["marv"], red("AAAAAH")],
-	["21:02:07", "laundry chute", "iron", ["marv"], "face"],
-	["21:02:40", "back door", "blowtorch", ["harry"], yellow("hat on fire")],
-	["21:03:15", "basement", "stairs: tar", ["marv"], "shoes lost"],
-	["21:03:31", "basement", "stairs: nail", ["harry"], red("AAAAAAAAAAAH")],
-	["21:04:02", "kitchen", "window: ornaments", ["marv"], "barefoot"],
-	["21:04:30", "front hall", "fan: feathers", ["harry"], "chicken"],
-	["21:05:11", "stairs", "paint can ×2", ["harry", "marv"], "face"],
-	["21:05:50", "dining room", "Axl (tarantula)", ["marv"], red("AAAAAAAAAAAAAAAAH")],
-	["21:05:52", "dining room", "crowbar (Harry)", ["marv"], dim("not a trap"), false],
-	["21:06:30", "hall", "Micro Machines", ["marv"], "down"],
-	["21:07:40", "zip line", "rope: cut", ["harry", "marv"], "down"],
+	// [time, where, what, what happened, and how each intruder now looks: [guess, confidence, state]], and whether
+	// it's one of Kevin's traps.
+	["21:00:41", "front door", "knob: 400°F", red("AAAAAH"), { 1: ["person", 97, "hand: 400°F"] }],
+	["21:00:58", "basement", "steps: ice", "down", { 2: ["person", 96, "horizontal"] }],
+	["21:01:20", "doggy door", "BB gun", red("AAAAAH"), { 2: ["person", 94, "forehead: BB"] }],
+	["21:02:07", "laundry chute", "iron", "face", { 2: ["person", 89, "face: iron-shaped"] }],
+	["21:02:40", "back door", "blowtorch", yellow("hat on fire"), { 1: ["person", 84, "head: on fire"] }],
+	["21:03:15", "basement", "stairs: tar", "shoes lost", { 2: ["person", 87, "barefoot"] }],
+	["21:03:31", "basement", "stairs: nail", red("AAAAAAAAAAAH"), { 1: ["person", 79, "bald, hopping"] }],
+	["21:04:02", "kitchen", "window: ornaments", "barefoot", { 2: ["person", 77, "barefoot, on glass"] }],
+	["21:04:30", "front hall", "fan: feathers", "feathered", { 1: ["chicken", 64, "bald, hopping"] }],
+	["21:05:11", "stairs", "paint can ×2", "face ×2", { 1: ["chicken", 61, "dazed"], 2: ["person", 70, "dazed"] }],
+	["21:05:50", "dining room", "Axl (tarantula)", red("AAAAAAAAAAAAAAAAH"), { 2: ["person", 52, "tarantula: on face"] }],
+	["21:05:52", "dining room", "crowbar", `intruder 1 → intruder 2 ${dim("(not a trap)")}`, { 2: ["person", 41, "crowbarred"] }, false],
+	["21:06:30", "hall", "Micro Machines", "down", { 2: ["rug", 38, "horizontal"] }],
+	["21:07:40", "zip line", "rope: cut", "down ×2", { 1: ["chicken", 59, "in the snow"], 2: ["rug", 44, "in the snow"] }],
 ];
 const total = traps.filter(([, , , , , trap = true]) => trap).length;
 const home = `${ESC}[H`;
 const row = (n) => `${ESC}[${n};1H${ESC}[2K`;
-const inverse = (text) => `${ESC}[7m${text}${ESC}[27m`;
-const header = (time) => ` ${dim("home-alarm · 671 Lincoln Blvd · mode: Kevin · police: on hold")}       ${time}`;
-const newest = (where, what, who) => `${where.padEnd(14)}${what.padEnd(20)}${who}`;
-const bar = (sprung) => `  ${dim("traps")}     ${"██".repeat(sprung)}${dim("░░".repeat(total - sprung))}  ${sprung}/${total}`;
-const tally = (hits) => `  ${dim("burglars")}  Harry ${hits.harry} · Marv ${hits.marv}`;
-const status = [[400, `${ESC}[2J${home}${header("21:00:00")}${row(3)}  ${dim("armed, waiting")}${row(5)}${bar(0)}${row(6)}${tally({ harry: 0, marv: 0 })}${row(7)}  ${dim("Kevin")}     fine`]];
-const hits = { harry: 0, marv: 0 };
+const header = (time) => `  ${dim("home-alarm · 671 Lincoln Blvd · mode: Kevin · police: on hold")}      ${time}`;
+const newest = (where, what, outcome) => `  ${where.padEnd(14)}${what.padEnd(20)}${outcome}`;
+const bar = (sprung) => `  ${dim("traps")}        ${"██".repeat(sprung)}${dim("░░".repeat(total - sprung))}  ${sprung}/${total}`;
+const intruder = (n, [guess, confidence, state]) => `  ${dim(`intruder ${n}`)}   ${guess.padEnd(9)}${dim(`${confidence}%`)}   ${state}`;
+const looks = { 1: ["person", 98, "at the front door"], 2: ["person", 97, "at the basement door"] };
+const status = [[400, `${ESC}[2J${home}${header("21:00:00")}${row(3)}  ${dim("armed, waiting")}${row(5)}${bar(0)}${row(6)}${intruder(1, looks[1])}${row(7)}${intruder(2, looks[2])}${row(8)}  ${dim("Kevin")}        fine`]];
 let sprung = 0;
-for (const [time, where, what, who, says, trap = true] of traps) {
+for (const [time, where, what, outcome, now, trap = true] of traps) {
 	if (trap) sprung++;
-	for (const name of who) hits[name]++;
-	const line = newest(where, what, `${who.map((name) => (name === "harry" ? "Harry" : "Marv")).join(" + ")}: ${says}`);
-	// Drawn whole, the newest flashed; then, a moment later, settled.
-	status.push([time === "21:05:52" ? 500 : 750, `${home}${row(1)}${header(time)}${row(3)}  ${inverse(line.replace(/\x1b\[[\d;]*m/g, ""))}${row(5)}${bar(sprung)}${row(6)}${tally(hits)}`]);
-	status.push([150, `${row(3)}  ${line}`]);
+	Object.assign(looks, now);
+	status.push([time === "21:05:52" ? 500 : 900, `${home}${row(1)}${header(time)}${row(3)}${newest(where, what, outcome)}${row(5)}${bar(sprung)}${row(6)}${intruder(1, looks[1])}${row(7)}${intruder(2, looks[2])}`]);
 }
-status.push([1200, `${home}${row(1)}${header("21:09:12")}${row(3)}  ${newest("next door", "motion", "2 adults, 1 small human, ")}`], [1500, "1 snow sh"]);
+status.push([1200, `${home}${row(1)}${header("21:09:12")}${row(3)}${newest("next door", "motion", "1 chicken, 1 rug, 1 small human, ")}`], [1500, "1 snow sh"]);
 s.live("christmas-eve-status", status);
 
 // Kate, somewhere in Indiana, in a polka van.
