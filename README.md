@@ -157,8 +157,9 @@ Support Desk. `scripts/scenes/itcrowd-art.mjs` draws its pictures: the
 swarm's one avatar, the scene's image, and the Internet.
 `scripts/scenes/itcrowd-avatars.py` cuts Jen, Roy and Moss from
 `itcrowd-avatars.webp`, a grid of them in pixel art, and Douglas from
-`itcrowd-avatar-douglas.webp`, the oil portrait he'd commission; the rest of
-the staff keep initials.
+`itcrowd-avatar-douglas.webp`, the oil portrait he'd commission, and
+Richmond, as a bat, from `itcrowd-avatar-richmond.webp`, on the red door; the
+rest of the staff keep initials.
 
 ### Adding a scene
 

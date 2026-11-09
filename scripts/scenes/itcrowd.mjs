@@ -36,9 +36,9 @@ const s = new Script({
 		patricia: { name: "Patricia", status: "online", ext: { bio: "Reception. I put calls through to IT. Nobody answers." } },
 		...Object.fromEntries(agents.map((id, i) => [id, { name: id, status: "online", roles: ["bot"], ext: { bio: `Agent ${i} of Moss's twelve, counting from zero. Trained on Roy's answering machine.` } }])),
 	},
-	// The basement and the boss in pixel art (itcrowd-avatars.py); the swarm shares one face, as a swarm should
-	// (itcrowd-art.mjs). The rest of the staff keep their initials.
-	avatars: (user_id) => (user_id.startsWith("moss-") ? `${MEDIA}/agent.png` : ["jen", "roy", "moss", "douglas"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
+	// The basement in pixel art, the boss in oils, the server room as a bat (itcrowd-avatars.py); the swarm shares one
+	// face, as a swarm should (itcrowd-art.mjs). The rest of the staff keep their initials.
+	avatars: (user_id) => (user_id.startsWith("moss-") ? `${MEDIA}/agent.png` : ["jen", "roy", "moss", "douglas", "richmond"].includes(user_id) ? `${MEDIA}/${user_id}.png` : undefined),
 });
 
 // The rooms, with no joined notices: they were always there. The Support Desk first, so its threads lead the sidebar.
