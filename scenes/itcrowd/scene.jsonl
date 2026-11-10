@@ -5,7 +5,7 @@
 {"rooms":[{"room_id":"serverroom","log_id":"1793608200003","title":"Server room","description":"Behind the red door. Do not open the red door."}]}
 {"rooms":[{"room_id":"it","log_id":"1793608200004","title":"IT Department","description":"The basement. Mind the stairs.","private":true}]}
 {"rooms":[{"room_id":"dm-douglas","log_id":"1793608200005","private":true}]}
-{"messages":[{"message_id":"1793608800000","log_id":"1793608800000","room_id":"it","from":{"user_id":"moss","name":"Moss"},"body":{"text":"Roy. I've automated you.","format":"markdown"}}]}
+{"messages":[{"message_id":"1793608800000","log_id":"1793608800000","room_id":"it","from":{"user_id":"moss","name":"Moss"},"body":{"text":"@roy I've automated you.","format":"markdown","mentions":["roy"]}}]}
 {"messages":[{"message_id":"1793608820000","log_id":"1793608820000","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"You've what?","format":"markdown"}}]}
 {"messages":[{"message_id":"1793608835000","log_id":"1793608835000","room_id":"it","from":{"user_id":"moss","name":"Moss"},"body":{"text":"Twelve agents. Trained on you. Well, on your answering machine. It's the best-documented part of you.","format":"markdown"}}]}
 {"messages":[{"message_id":"1793608865000","log_id":"1793608865000","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"I am more than my answering machine, Moss.","format":"markdown"}}]}
@@ -49,7 +49,7 @@
 {"messages":[{"message_id":"1793614325001","log_id":"1793614325001","room_id":"t4473","from":{"user_id":"richmond","name":"Richmond","roles":["server room"]},"body":{"text":"The server room is cold. I like it cold. But today it is colder, and the servers have begun to hum in a minor key.","format":"markdown"}}]}
 {"messages":[{"message_id":"1793614329001","log_id":"1793614329001","room_id":"t4473","from":{"user_id":"moss-02","name":"moss-02","roles":["bot"]},"body":{"text":"Have you tried turning it off and on again?","format":"markdown"}}]}
 {"messages":[{"message_id":"1793614629001","log_id":"1793614629001","room_id":"serverroom","from":{"user_id":"richmond","name":"Richmond","roles":["server room"]},"body":{"text":"Someone has filed a ticket about the cold. It was me.","format":"markdown"}}]}
-{"messages":[{"message_id":"1793615400000","log_id":"1793615400000","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"Jen. Whatever you do, don't open the red door.","format":"markdown"}}]}
+{"messages":[{"message_id":"1793615400000","log_id":"1793615400000","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"@jen whatever you do, don't open the red door.","format":"markdown","mentions":["jen"]}}]}
 {"messages":[{"message_id":"1793615420000","log_id":"1793615420000","room_id":"it","from":{"user_id":"jen","name":"Jen","roles":["head of IT"]},"body":{"text":"What's behind the red door?","format":"markdown"}}]}
 {"messages":[{"message_id":"1793615426000","log_id":"1793615426000","room_id":"it","from":{"user_id":"moss","name":"Moss"},"body":{"text":"Nothing.","format":"markdown"}}]}
 {"messages":[{"message_id":"1793615430000","log_id":"1793615430000","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"*Nobody.*","format":"markdown"}}]}
@@ -99,7 +99,7 @@
 {"messages":[{"message_id":"1793628125001","log_id":"1793628155001","room_id":"t4477","from":{"user_id":"moss","name":"Moss"},"body":{"text":"Fire! Fire! Help me! Reynholm Industries, the basement.\n\nLooking forward to hearing from you.\n\nAll the best,\nMaurice Moss","format":"markdown"},"prev_log_id":"1793628125001"}]}
 {"messages":[{"message_id":"1793628195001","log_id":"1793628195001","room_id":"t4477","from":{"user_id":"moss","name":"Moss"},"body":{"text":"I'll just put this over here, with the rest of the fire.","format":"markdown"}}]}
 {"messages":[{"message_id":"1793628199001","log_id":"1793628199001","room_id":"t4477","from":{"user_id":"moss-06","name":"moss-06","roles":["bot"]},"body":{"text":"Have you tried turning it off and on again?","format":"markdown"}}]}
-{"messages":[{"message_id":"1793628319001","log_id":"1793628319001","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"Moss, there's smoke coming from under your desk.","format":"markdown"}}]}
+{"messages":[{"message_id":"1793628319001","log_id":"1793628319001","room_id":"it","from":{"user_id":"roy","name":"Roy"},"body":{"text":"@moss there's smoke coming from under your desk.","format":"markdown","mentions":["moss"]}}]}
 {"messages":[{"message_id":"1793628329001","log_id":"1793628329001","room_id":"it","from":{"user_id":"moss","name":"Moss"},"body":{"text":"I know. I've filed a ticket.","format":"markdown"}}]}
 {"rooms":[{"room_id":"t4478","log_id":"1793630400000","parent_room_id":"desk","title":"#4478 The Internet is blinking","description":"Presenting it on Thursday."}]}
 {"memberships":[{"log_id":"1793630400001","room_id":"t4478","members":[{"user":{"user_id":"jen","name":"Jen","roles":["head of IT"]},"joined":true},{"user":{"user_id":"moss-07","name":"moss-07","roles":["bot"]},"joined":true}]}]}
