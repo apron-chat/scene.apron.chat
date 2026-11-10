@@ -52,7 +52,7 @@ s.room("dm-douglas", { ...quiet, private: true }, ["jen", "douglas"]);
 
 // Twenty to nine: Moss tells Roy.
 s.at(gmt("2026-11-02 08:40"));
-s.say("it", "moss", "Roy. I've automated you.", { after: 0 });
+s.say("it", "moss", "@roy I've automated you.", { mentions: ["roy"], after: 0 });
 s.say("it", "roy", "You've what?", { after: 20 });
 s.say("it", "moss", "Twelve agents. Trained on you. Well, on your answering machine. It's the best-documented part of you.", { after: 15 });
 s.say("it", "roy", "I am more than my answering machine, Moss.", { after: 30 });
@@ -141,7 +141,7 @@ s.say("serverroom", "richmond", "Someone has filed a ticket about the cold. It w
 
 // Half ten: the red door. The server room is the one room Jen hasn't joined, listed for her to open.
 s.at(gmt("2026-11-02 10:30"));
-s.say("it", "roy", "Jen. Whatever you do, don't open the red door.", { after: 0 });
+s.say("it", "roy", "@jen whatever you do, don't open the red door.", { mentions: ["jen"], after: 0 });
 s.say("it", "jen", "What's behind the red door?", { after: 20 });
 s.say("it", "moss", "Nothing.", { after: 6 });
 s.say("it", "roy", "*Nobody.*", { after: 4 });
@@ -204,7 +204,7 @@ const fire = ticket("t4477", "#4477 Fire", "Basement. Ongoing.", "moss", 0, ["De
 s.edit(fire, "Fire! Fire! Help me! Reynholm Industries, the basement.\n\nLooking forward to hearing from you.\n\nAll the best,\nMaurice Moss", { after: 30 });
 s.say("t4477", "moss", "I'll just put this over here, with the rest of the fire.", { after: 40 });
 answer("t4477", "moss-06");
-s.say("it", "roy", "Moss, there's smoke coming from under your desk.", { after: 120 });
+s.say("it", "roy", "@moss there's smoke coming from under your desk.", { mentions: ["moss"], after: 120 });
 s.say("it", "moss", "I know. I've filed a ticket.", { after: 10 });
 
 s.at(gmt("2026-11-02 14:40"));

@@ -110,7 +110,7 @@ s.say("marley", "buzz", "In 1958 he murdered his whole family with a snow shovel
 const salt = s.say("marley", "buzz", "That bucket of salt he carries around? For the sidewalks? Think about it.", { after: 25 });
 s.say("marley", "kevin", "Think about what", { reply: salt, after: 30 });
 s.say("marley", "buzz", "The bodies, Kevin.", { after: 10 });
-const behave = s.say("marley", "kate", "Buzz, that's enough.", { after: 90 });
+const behave = s.say("marley", "kate", "@buzz that's enough.", { mentions: ["buzz"], after: 90 });
 s.react(behave, "buzz", ["🙄"]);
 const merry = s.say("marley", "marley", "Merry Christmas.", { after: 600 });
 s.react(merry, "kevin", ["😱"]);
@@ -133,7 +133,7 @@ s.say("plumbing", "harry", "The McCallisters leave for Paris at eight. The jewel
 s.say("plumbing", "marv", "I've been thinking. When we do a house, I want to leave the water running. Plug the sinks. Every house.", { after: 45 });
 s.say("plumbing", "harry", "Why would we do that.", { after: 12 });
 s.say("plumbing", "marv", "A calling card. So everybody knows it was us. **The Wet Bandits.** 💦", { after: 20 });
-s.say("plumbing", "harry", "Marv, this room is public.", { after: 30 });
+s.say("plumbing", "harry", "@marv this room is public.", { mentions: ["marv"], after: 30 });
 s.say("plumbing", "marv", "Who reads a plumbing room?", { after: 8 });
 
 // Pizza night.
@@ -157,7 +157,7 @@ s.say("pizza", "kate", "Got it. Drying the passports, napkins in the trash.", { 
 const jerk = s.say("pizza", "frank", "Look what you did, you little jerk.", { after: 15 });
 s.react(jerk, "kate", ["😐"]);
 s.say("pizza", "kevin", "Everyone in this family hates me!", { after: 20 });
-s.say("pizza", "kate", "Kevin. Upstairs. Third floor. Now.", { after: 15 });
+s.say("pizza", "kate", "@kevin Upstairs. Third floor. Now.", { mentions: ["kevin"], after: 15 });
 
 s.at(ct("2025-12-19 20:10"));
 s.edit(packing, PACKING(["Buzz", "Megan", "Linnie", "Jeff", "Fuller", "Heather"]), { after: 0 });
@@ -170,7 +170,7 @@ s.react(families, "buzz", ["🍿"]);
 s.say("family", "kevin", "I wish you'd all just disappear.", { after: 40 });
 s.leave("family", "kevin", 5);
 s.say("family", "buzz", "He left the chat. Can we leave him too?", { after: 30 });
-s.say("family", "kate", "Buzz.", { after: 20 });
+s.say("family", "kate", "@buzz", { mentions: ["buzz"], after: 20 });
 
 // In the night, a tree on the power line.
 s.at(ct("2025-12-20 02:13"));
@@ -201,7 +201,7 @@ s.at(ct("2025-12-20 09:40"));
 s.say("security", "homealarm", "Motion: upstairs (third floor). 1 small human. Everyone else: gone since 08:01. Garage: open.", { after: 0 });
 s.join("family", "kevin", 300);
 s.say("family", "kevin", "Mom? Dad?", { after: 10 });
-s.say("family", "kevin", "Buzz?? I'm going in your room", { after: 120 });
+s.say("family", "kevin", "@buzz I'm going in your room", { mentions: ["buzz"], after: 120 });
 const disappear = s.say("family", "kevin", "**I made my family disappear!**", { after: 180 });
 
 s.at(ct("2025-12-20 10:40"));
@@ -403,7 +403,7 @@ const love = s.say("dm-kevin", "kate", "I'm on my way!! Don't open the door for 
 s.at(ct("2025-12-24 20:30"));
 const heard = s.say("family", "kate", "Has anyone heard from Kevin today?", { after: 0 });
 s.say("family", "buzz", "@kate relax, he's fine. Probably eating junk and watching rubbish.", { mentions: ["kate"], reply: heard, after: 240 });
-const champagne = s.say("family", "frank", "Kate, the airline lounge asks if we still want the champagne. I said yes. It's on your card.", { after: 600 });
+const champagne = s.say("family", "frank", "@kate the airline lounge asks if we still want the champagne. I said yes. It's on your card.", { mentions: ["kate"], after: 600 });
 s.react(champagne, "kate", ["😤"]);
 
 // Nine o'clock.
